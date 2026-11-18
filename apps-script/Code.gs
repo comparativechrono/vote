@@ -1,3 +1,6 @@
+/** @OnlyCurrentDoc */
+// (The line above limits the script to this spreadsheet: it can't open your other files.)
+
 /**
  * GM2 live recap: the server for votes and comments (a Google Apps Script web app).
  *
@@ -288,7 +291,8 @@ function exportSession_(session) {
   }
   votes = [votes[0]].concat(votes.slice(1).sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] - b[1]; }));
   comments = [comments[0]].concat(comments.slice(1).sort(function (a, b) { return a[0] - b[0]; }));
-  var ss = spreadsheet_();
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) return { ok: false, error: 'no-sheet: use Live recap > Export in the spreadsheet' };
   writeSheet_(ss, 'Votes ' + session, votes);
   writeSheet_(ss, 'Comments ' + session, comments);
   return { ok: true, session: session, votes: votes.length - 1, comments: comments.length - 1, phones: joins, url: ss.getUrl() };
@@ -308,16 +312,6 @@ function clearSession_(session) {
     }
   }
   return { ok: true, deleted: n };
-}
-
-function spreadsheet_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (ss) return ss;
-  var id = props_().getProperty('SHEET_ID');
-  if (id) return SpreadsheetApp.openById(id);
-  ss = SpreadsheetApp.create('GM2 live recap');
-  props_().setProperty('SHEET_ID', ss.getId());
-  return ss;
 }
 
 function writeSheet_(ss, name, rows) {

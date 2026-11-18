@@ -615,7 +615,7 @@ function openSettings(message) {
     h('h2', null, 'Settings'),
     h('p', { class: 'set-intro' }, isDemo
       ? 'Demo mode: votes stay in this browser. Open the student page in other tabs to try it, or add simulated phones.'
-      : 'Connected to the web app in the Google Sheet. The key is the one set with Live recap ▸ Set the presenter key.'),
+      : 'Connected to the web app in the Google Sheet. The key is the one you set there, with Set the presenter key in the Live recap menu.'),
     h('label', { for: 'set-url' }, 'Web app address'), urlIn,
     h('p', { class: 'hint' }, 'Leave it empty to use the address in js/config.js, or demo mode if that is empty too.'),
     h('label', { for: 'set-key' }, 'Presenter key'), keyIn,
