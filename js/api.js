@@ -17,7 +17,7 @@ export function explain(err) {
   const words = {
     'no-presenter-key': 'The server has no presenter key yet. In the Google Sheet, choose Set the presenter key from the Live recap menu.',
     'wrong-key': 'The presenter key doesn’t match the one set in the Google Sheet.',
-    'not-json': 'The address answered, but not as the web app. Check it ends in /exec and that the deployment gives access to Anyone.',
+    'not-json': 'The server sent a page instead of data. If this lasts, check that the address ends in /exec and that the deployment gives access to Anyone.',
     timeout: 'The server took too long to answer.',
     network: 'The server can’t be reached. Check the address and the internet connection.',
   };
