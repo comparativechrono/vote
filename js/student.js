@@ -49,6 +49,7 @@ function setNet(kind) {
   const words = { connecting: 'Connecting…', live: DEMO ? 'Demo mode' : 'Live', retry: 'Reconnecting…' };
   net.textContent = words[kind];
   net.dataset.state = kind;
+  net.hidden = L.mode !== 'live';
 }
 
 const voteKey = (st) => `${st.session}|${st.q}|${st.round || 0}`;
@@ -69,7 +70,7 @@ async function tick() {
     }
   }
   const slower = Math.min(4, 1 + 0.6 * L.failures);
-  L.timer = setTimeout(tick, CONFIG.pollStudentMs * slower + Math.random() * 1500);
+  L.timer = setTimeout(tick, CONFIG.pollStudentMs * slower + Math.random() * CONFIG.pollJitterMs);
 }
 
 async function join(session) {
@@ -121,7 +122,7 @@ function renderLive() {
       h('button', { type: 'button', class: 'btn btn-primary', onclick: () => setMode('revise') }, 'Revise on your own')));
   }
   updateLive();
-  composer.reset();
+  composer.reset(s && s.kind === 'text');
 }
 
 function panel(...kids) { return h('article', { class: 'panel' }, kids); }
@@ -211,7 +212,7 @@ function updateLive() {
     view.input.disabled = !st.open;
     view.send.disabled = !st.open;
     if (val != null && document.activeElement !== view.input && view.input.value === '') view.input.value = val;
-    view.plot.replaceChildren(res || st.answer ? numberPlot(s, res, { showAnswer: st.answer, mine: val, width: 600, height: 250 }) : '');
+    view.plot.replaceChildren(...(res || st.answer ? [numberPlot(s, res, { showAnswer: st.answer, mine: val, width: 600, height: 280 })] : []));
   }
   if (view.explain) view.explain.hidden = !st.answer;
   let words;
@@ -303,7 +304,8 @@ const composer = (() => {
   open.addEventListener('click', () => toggle(true));
   box.append(open, form);
   return {
-    reset() { status.textContent = ''; box.hidden = L.mode !== 'live'; },
+    /** A new slide: close the box (and hide it where the slide itself takes text). */
+    reset(hide) { status.textContent = ''; toggle(false); box.hidden = L.mode !== 'live' || !!hide; },
   };
 })();
 
@@ -324,6 +326,7 @@ function check(value) {
 
 function renderRevise() {
   if (L.demo) { L.demo.destroy(); L.demo = null; }
+  net.hidden = true;
   document.body.dataset.mode = 'revise';
   $('#mode-btn').textContent = 'Back to the lecture';
   const i = Math.max(0, Math.min(REVISE.length - 1, L.reviseIndex));
@@ -351,6 +354,7 @@ function renderRevise() {
 function setMode(mode) {
   L.mode = mode;
   history.replaceState(null, '', mode === 'revise' ? '#revise' : window.location.pathname + window.location.search);
+  net.hidden = mode !== 'live';
   if (mode === 'revise') renderRevise();
   else { L.slideId = null; renderLive(); tick(); }
   window.scrollTo(0, 0);

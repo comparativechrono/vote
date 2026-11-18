@@ -9,8 +9,16 @@ export const LETTERS = 'ABCDEFGHIJ';
 export const sectionOf = (slide) => DECK.sections.find((s) => s.id === slide.section);
 export const weekLabel = (sec) => (sec && sec.week ? `Week ${sec.week}` : '');
 
+const NB = '\u00A0';
+/** Keeps numbers with their units and both sides of '=' together, outside any HTML tags. */
+export function typeset(html) {
+  return String(html).split(/(<[^>]+>)/).map((seg, i) => (i % 2 ? seg : seg
+    .replace(/(\d) (g|lb|SD|df)\b/g, `$1${NB}$2`)
+    .replace(/ = /g, `${NB}=${NB}`)
+    .replace(/ − /g, `${NB}−${NB}`))).join('');
+}
 /** Content text from content.js (our own, so it may hold simple HTML). */
-export const rich = (tag, cls, html) => h(tag, { class: cls, html });
+export const rich = (tag, cls, html) => h(tag, { class: cls, html: typeset(html) });
 
 /** How many choices a question has (for the server's check of each vote). */
 export function choiceCount(slide) {
@@ -103,33 +111,40 @@ export function numberPlot(slide, results, { showAnswer, mine, width = 1000, hei
   const x = linear([lo, hi], [40, width - 40]);
   const base = height - 64;
   const span = hi - lo;
-  const step = span <= 100 ? 1 : span / 100;
-  const stacks = new Map();
-  const r = Math.max(4, Math.min(11, (width - 80) / (span / step) / 2.2));
+  const r = width >= 900 ? 9 : 7;
+  // bins about as wide as a dot, rounded to 1, 2, 2.5 or 5 times a power of ten
+  const raw = span / ((width - 80) / (2 * r));
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((v) => v >= raw);
   const sorted = [...values].sort((a, b) => a - b);
+  const med = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2) : null;
+  const ans = showAnswer && isFinite(slide.answer) ? slide.answer : null;
+  // the lines first, so that the dots stay visible over them
+  if (ans !== null) el('line', { x1: x(ans), x2: x(ans), y1: 44, y2: base, class: 's-green', 'stroke-width': 4 }, s);
+  if (med !== null) el('line', { x1: x(med), x2: x(med), y1: 18, y2: base, class: 's-ink', 'stroke-dasharray': '6 5', 'stroke-width': 2 }, s);
+  const stacks = new Map();
   const maxStack = Math.floor((base - 30) / (2 * r));
+  const myBin = mine != null && isFinite(mine) ? Math.round((mine - lo) / step) : null;
+  let mineDrawn = false;
   for (const v of sorted) {
     const k = Math.round((v - lo) / step);
     const n = stacks.get(k) || 0;
     stacks.set(k, n + 1);
     if (n >= maxStack) continue;
-    const cx = x(lo + k * step);
-    el('circle', { cx, cy: base - r - n * 2 * r * 0.96, r: r * 0.9, class: 'f-blue', opacity: 0.8 }, s);
+    const isMine = !mineDrawn && k === myBin;
+    if (isMine) mineDrawn = true;
+    el('circle', { cx: x(lo + k * step), cy: base - r - n * 2 * r * 0.96, r: r * 0.9, class: isMine ? 'f-plum' : 'f-blue', opacity: isMine ? 1 : 0.8 }, s);
   }
-  if (mine != null && isFinite(mine)) {
-    el('circle', { cx: x(mine), cy: base + 14, r: 7, class: 'f-plum' }, s);
-    text(s, x(mine), base + 40, 'You', { 'text-anchor': 'middle', class: 'lbl c-plum' });
+  // labels on opposite sides when the median and the answer are close
+  const unit = slide.unit === '%' ? '%' : '';
+  const medLeft = med !== null && (ans !== null ? med <= ans : med > (lo + hi) / 2);
+  if (med !== null) text(s, x(med) + (medLeft ? -8 : 8), 22, `Median ${num(med, med % 1 ? 1 : 0)}${unit}`, { class: 'lbl', 'text-anchor': medLeft ? 'end' : 'start' });
+  if (ans !== null) text(s, x(ans) + (medLeft ? 8 : -8), 62, `${num(ans)}${unit}`, { class: 'lbl-strong c-green', 'text-anchor': medLeft ? 'start' : 'end' });
+  axisX(s, x, base, { values: ticks(lo, hi, width >= 900 ? 10 : 5), format: (v) => num(v), label: slide.unit && slide.unit !== '%' ? slide.unit : (slide.unit === '%' ? 'Percent' : '') });
+  if (mineDrawn) {
+    el('circle', { cx: width - 150, cy: height - 12, r: 6, class: 'f-plum' }, s);
+    text(s, width - 138, height - 6, 'Your answer', { class: 'tick c-plum' });
   }
-  if (sorted.length) {
-    const med = sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
-    el('line', { x1: x(med), x2: x(med), y1: 18, y2: base, class: 's-ink', 'stroke-dasharray': '6 5', 'stroke-width': 2 }, s);
-    text(s, x(med) + (med > (lo + hi) / 2 ? -8 : 8), 22, `Median ${num(med, med % 1 ? 1 : 0)}`, { class: 'lbl', 'text-anchor': med > (lo + hi) / 2 ? 'end' : 'start' });
-  }
-  if (showAnswer && isFinite(slide.answer)) {
-    el('line', { x1: x(slide.answer), x2: x(slide.answer), y1: 40, y2: base, class: 's-green', 'stroke-width': 4 }, s);
-    text(s, x(slide.answer) + 8, 58, `${num(slide.answer)} ${slide.unit === '%' ? '%' : ''}`.trim(), { class: 'lbl-strong c-green' });
-  }
-  axisX(s, x, base, { values: ticks(lo, hi, 10), format: (v) => num(v), label: slide.unit && slide.unit !== '%' ? slide.unit : (slide.unit === '%' ? 'Percent' : '') });
   return s;
 }
 

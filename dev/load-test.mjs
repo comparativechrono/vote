@@ -5,7 +5,8 @@
 //
 //   node dev/load-test.mjs --url http://localhost:8080/exec --key rehearsal --phones 60 --minutes 3
 //
-// Options: --poll 5000 (ms between a phone's checks, plus up to 1.5 s at random)
+// Options: --poll 6000 --jitter 2000 (a phone waits 6 s plus up to 2 s at random between checks)
+//          --arrive 30 (phones join over the first 30 s, as people scan the QR code)
 //          --every 20 (seconds between questions)
 
 const arg = (name, dflt) => {
@@ -16,7 +17,9 @@ const URL_ = arg('url', 'http://localhost:8080/exec');
 const KEY = arg('key', 'rehearsal');
 const PHONES = Number(arg('phones', 60));
 const MINUTES = Number(arg('minutes', 3));
-const POLL = Number(arg('poll', 5000));
+const POLL = Number(arg('poll', 6000));
+const JITTER = Number(arg('jitter', 2000));
+const ARRIVE = Number(arg('arrive', 30)) * 1000; // phones join over this many seconds
 const EVERY = Number(arg('every', 20)) * 1000;
 const SESSION = `loadtest-${Date.now().toString(36)}`;
 
@@ -75,7 +78,7 @@ async function presenter() {
 
 async function phone() {
   const voter = id();
-  await sleep(Math.random() * 4000);
+  await sleep(Math.random() * ARRIVE);
   await post({ a: 'join', voter });
   const voted = new Set();
   while (Date.now() < end) {
@@ -85,7 +88,7 @@ async function phone() {
       voted.add(st.q);
       (async () => { await sleep(2000 + Math.random() * 12000); await post({ a: 'vote', voter, session: st.session, q: st.q, value: Math.floor(Math.random() * 4) }); })();
     }
-    await sleep(POLL + Math.random() * 1500);
+    await sleep(POLL + Math.random() * JITTER);
   }
 }
 
@@ -115,6 +118,6 @@ console.log(cleared.ok ? `Deleted the test session's ${cleared.deleted} entries;
 if (/^http:\/\/(localhost|127\.0\.0\.1)/.test(URL_)) {
   try {
     const s = await (await fetch(new URL('/stats', URL_))).json();
-    console.log(`dev server: at most ${s.maxActive} requests at once; ${s.refused} refused.`);
+    console.log(`dev server: requests running at once: median ${s.atOnce.median}, 95% of the time ${s.atOnce.p95} or fewer, 99% ${s.atOnce.p99}, at most ${s.atOnce.max}; ${s.refused} refused.`);
   } catch { /* not the dev server */ }
 }

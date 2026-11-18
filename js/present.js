@@ -209,7 +209,7 @@ function endSlide(s) {
 
 /** Shrinks a question that would overflow the slide. */
 function fit() {
-  if (!view || !view.frame) return;
+  if (!view || !view.frame || view.kind === 'text') return;
   const { frame, inner } = view;
   inner.style.zoom = '';
   const fr = frame.getBoundingClientRect().height;
@@ -286,10 +286,11 @@ function buildFooter() {
     voting: tool('Voting', 'V', () => toggleVoting()),
     comments: tool('Comments', 'C', () => toggleOverlay('comments'), badge),
     menu: tool('Sections', 'M', () => toggleOverlay('menu')),
+    settings: tool('Settings', 'S', () => openSettings()),
     count: h('span', { class: 'slide-n' }),
     badge,
   };
-  foot.tools.replaceChildren(tools.results, tools.answer, tools.voting, tools.comments, tools.menu, tools.count);
+  foot.tools.replaceChildren(tools.results, tools.answer, tools.voting, tools.comments, tools.menu, tools.settings, tools.count);
 }
 
 function updateFooter() {
@@ -535,7 +536,7 @@ function renderComments() {
   const all = allComments().filter((c) => !TEXT_QS.has(c.slide));
   const hidden = all.filter((c) => c.hidden).length;
   const list = all.filter((c) => S.showHidden || !c.hidden);
-  box.replaceChildren(
+  box.replaceChildren(...[
     h('div', { class: 'drawer-head' },
       h('h2', null, 'Comments'),
       h('button', { type: 'button', class: 'btn-quiet btn btn-small', onclick: () => toggleOverlay('comments') }, 'Close')),
@@ -546,7 +547,7 @@ function renderComments() {
           h('button', { type: 'button', class: 'btn btn-quiet btn-small', onclick: () => hideComment(c, !c.hidden) }, c.hidden ? 'Show' : 'Hide')))))
       : h('p', { class: 'drawer-empty' }, 'No comments yet. Students can send one from their phones at any time.'),
     hidden ? h('button', { type: 'button', class: 'btn btn-quiet btn-small drawer-hidden', onclick: () => { S.showHidden = !S.showHidden; renderComments(); } },
-      S.showHidden ? 'Leave out hidden comments' : `Show ${hidden} hidden`) : null);
+      S.showHidden ? 'Leave out hidden comments' : `Show ${hidden} hidden`) : null].filter(Boolean));
 }
 
 function renderQrBig() {
@@ -628,7 +629,7 @@ function openSettings(message) {
       backend && backend.mode !== 'apps-script' ? simBtn : null,
       backend && backend.mode === 'demo' ? h('button', { type: 'button', class: 'btn btn-quiet', onclick: () => { stopSimulation(); backend.reset(); S.live = null; S.stage = {}; S.closed = {}; savePos(); renderSlide(); push(); say('Demo votes and comments cleared.'); } }, 'Clear the demo votes') : null,
       h('button', { type: 'button', class: 'btn btn-quiet', onclick: () => dlg.close() }, 'Close')),
-    h('p', { class: 'hint' }, h('a', { href: joinHref(), target: '_blank', rel: 'noopener' }, 'Open the student page'), ' in a new tab.')));
+    h('p', { class: 'hint' }, h('a', { href: joinHref(), target: '_blank', rel: 'noopener' }, 'Open the student page'), ' in a new tab. Press ? on the slides for the keys.')));
   dlg.showModal();
 }
 
@@ -770,8 +771,6 @@ async function start() {
   push();
   poll();
   if (P.url && !P.key) openSettings('Type the presenter key you set in the Google Sheet.');
-  $('#help-btn')?.addEventListener('click', () => toggleOverlay('help'));
-  $('#settings-btn')?.addEventListener('click', () => openSettings());
 }
 
 start();

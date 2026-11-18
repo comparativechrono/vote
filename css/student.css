@@ -22,7 +22,8 @@ body.student {
   min-height: 54px; padding: 6px 16px;
   background: var(--paper); border-bottom: 1px solid var(--hair);
 }
-.brand { font-weight: 600; color: var(--ink); text-decoration: none; margin-right: auto; display: flex; align-items: center; gap: 9px; }
+.brand { font-weight: 600; color: var(--ink); text-decoration: none; margin-right: auto; display: flex; align-items: center; gap: 9px; white-space: nowrap; }
+.bar .btn { white-space: nowrap; }
 .brand::before { content: ''; width: 12px; height: 12px; border-radius: 3px; background: var(--plum); }
 .net { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .net::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--hair); }
@@ -73,6 +74,8 @@ details.try[open] summary { margin-bottom: 12px; }
 .num-row .unit { color: var(--muted); }
 .num-row .btn { min-height: 48px; margin-left: auto; }
 .plot svg { margin-top: 6px; }
+.panel .numplot .tick, .panel .numplot .axis-label { font-size: 22px; }
+.panel .numplot .lbl, .panel .numplot .lbl-strong { font-size: 24px; }
 .check-n { font-size: 20px; font-weight: 600; color: var(--green-ink); }
 
 .text-form { display: flex; flex-direction: column; gap: 10px; }

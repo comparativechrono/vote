@@ -40,7 +40,7 @@ function meanMedian(root) {
   const r = S.rng(11);
   const n = 189;
   const base = Array.from({ length: n }, (_, i) => {
-    const v = 80 + 41 * Math.exp(0.6 * S.normInv((i + 0.5) / n)) + (r() - 0.5) * 6;
+    const v = 80 + 41 * Math.exp(0.64 * S.normInv((i + 0.5) / n)) + (r() - 0.5) * 6;
     return Math.round(Math.min(250, Math.max(80, v)));
   }).sort((a, b) => a - b);
   const p90 = S.quantile(base, 0.9);
@@ -247,11 +247,11 @@ function sampling(root) {
     onchange: (v) => { stop(); n = v; means = []; last = null; draw(); },
   });
   const one = button('Take 1 sample', () => { stop(); draw1(); draw(); });
-  const many = button('Take 100 samples', () => {
+  const many = button('Take 1,000 samples', () => {
     stop();
     let done = 0;
-    stop = animate(1200, (t) => {
-      const target = Math.round(100 * ease(t));
+    stop = animate(1400, (t) => {
+      const target = Math.round(1000 * ease(t));
       while (done < target) { draw1(); done++; }
       draw();
     });
@@ -275,8 +275,8 @@ function sampling(root) {
     // the sample means
     const w = n === 200 ? 20 : 50;
     const b = bins(means, 500, 5400, w);
-    const top = Math.max(8, ...b.map((d) => d.n)) * 1.15;
-    const y = linear([0, top], [236, 104]);
+    const top = Math.max(8, ...b.map((d) => d.n)) * 1.08;
+    const y = linear([0, top], [236, 112]);
     text(s, 44, 100, means.length ? `Means of ${num(means.length)} samples` : 'The means of the samples collect here', { class: 'lbl' });
     for (const d of b) {
       if (!d.n) continue;
@@ -334,7 +334,7 @@ function coverage(root) {
 
   function draw() {
     clear(s);
-    const top = 14, step = 5.6;
+    const top = 22, step = 5.6;
     el('line', { x1: x(BW_MEAN), x2: x(BW_MEAN), y1: top - 6, y2: top + SHOW * step + 4, class: 's-ink', 'stroke-dasharray': '5 4', 'stroke-width': 1.5 }, s);
     shown.forEach((d, i) => {
       const yy = top + (SHOW - shown.length + i) * step + 3;
@@ -342,7 +342,7 @@ function coverage(root) {
       el('line', { x1: x(a), x2: x(b), y1: yy, y2: yy, class: d.hit ? 's-blue' : 's-red', 'stroke-width': d.hit ? 2.5 : 3.5 }, s);
       el('circle', { cx: x(d.m), cy: yy, r: 2.2, class: d.hit ? 'f-blue' : 'f-red' }, s);
     });
-    text(s, x(BW_MEAN) + 6, top + SHOW * step + 16, 'True mean 2,945 g', { class: 'lbl' });
+    text(s, x(BW_MEAN) + 6, top + 2, 'True mean 2,945 g', { class: 'lbl' });
     axisX(s, x, 262, { values: [2000, 2500, 3000, 3500, 4000], format: (v) => num(v), label: 'Birth weight (g)' });
     const inShown = shown.filter((d) => d.hit).length;
     ro.set([
@@ -370,7 +370,7 @@ function alleles(root) {
     onchange: (v) => { snp = v; people = null; size.set(fromN(realN())); draw(); },
   });
   const size = slider({
-    label: 'People genotyped', min: 0, max: 100, step: 0.5, value: fromN(realN()),
+    label: 'People genotyped', min: 0, max: 100, step: 0.01, value: fromN(realN()),
     format: (v) => num(toN(v)), oninput: (v) => { people = toN(v); draw(); },
   });
   controls(root, snp$.el, size.el);
@@ -447,6 +447,12 @@ function pArea(root) {
     el('path', { d: area(pts(tc, 5), y(0)), class: 'f-red', opacity: 0.55 }, s);
     if (sides === 2) el('path', { d: area(pts(-5, -tc), y(0)), class: 'f-red', opacity: 0.55 }, s);
     el('path', { d: line(pts(-5, 5)), class: 's-ink f-none', 'stroke-width': 2.5 }, s);
+    const tail = 1 - S.tCdf(t, df);
+    if (t < 4.6) {
+      const lab = pct(tail, tail < 0.001 ? 2 : 1);
+      text(s, x(Math.min(4.7, tc + 0.35)), y(0) - 12, lab, { class: 'lbl c-red', 'text-anchor': 'start' });
+      if (sides === 2) text(s, x(Math.max(-4.7, -tc - 0.35)), y(0) - 12, lab, { class: 'lbl c-red', 'text-anchor': 'end' });
+    }
     el('line', { x1: x(tc), x2: x(tc), y1: y(0), y2: 30, class: 's-orange', 'stroke-width': 3 }, s);
     text(s, x(tc) + (tc > 3.5 ? -6 : 6), 28, `t = ${num(t, 2)}`, { class: 'lbl c-orange', 'text-anchor': tc > 3.5 ? 'end' : 'start' });
     text(s, x(-4.6), 40, 'If H₀ is true', { class: 'lbl c-muted' });
@@ -463,7 +469,7 @@ function pArea(root) {
     const p = sides === 2 ? S.tP2(t, df) : 1 - S.tCdf(t, df);
     ro.set([
       ['t', `${num(diff)} / ${num(SMOKE_SE)} = ${num(t, 2)}`],
-      ['P', `${pnum(p)}, the red area`],
+      ['P', `${pnum(p)}, the shaded area`],
       ['95% CI', `${num(lo)} to ${num(hi)} g${lo > 0 ? ', excludes 0' : ', includes 0'}`],
     ]);
   }
@@ -478,7 +484,7 @@ function pvalueSize(root) {
   const toN = (v) => Math.round(20 * 50000 ** (v / 100));
   const fromN = (n) => (100 * Math.log(n / 20)) / Math.log(50000);
   const d$ = slider({ label: 'Your difference', min: 0, max: 400, step: 5, value: diff, format: (v) => `${num(v)} g`, oninput: (v) => { diff = v; draw(); } });
-  const n$ = slider({ label: 'Your babies', min: 0, max: 100, step: 0.5, value: fromN(people), format: (v) => num(toN(v)), oninput: (v) => { people = toN(v); draw(); } });
+  const n$ = slider({ label: 'Your babies', min: 0, max: 100, step: 0.01, value: fromN(people), format: (v) => num(toN(v)), oninput: (v) => { people = toN(v); draw(); } });
   controls(root, d$.el, n$.el);
   note(root, 'Two equal groups, birth weight SD 750 g, t-test.');
 
@@ -504,7 +510,7 @@ function pvalueSize(root) {
       const a = Math.max(-100, st.lo), b = Math.min(600, st.hi);
       el('line', { x1: x(a), x2: x(b), y1: yy + 4, y2: yy + 4, class: i === 2 ? 's-orange' : 's-blue', 'stroke-width': 4 }, s);
       el('circle', { cx: x(st.d), cy: yy + 4, r: 6, class: i === 2 ? 'f-orange' : 'f-blue' }, s);
-      text(s, x(st.d), yy - 8, `${num(st.d)} g`, { class: 'tick', 'text-anchor': 'middle' });
+      text(s, x(st.d) + 8, yy - 8, `${num(st.d)} g`, { class: 'tick' });
     });
     axisX(s, x, 216, { values: [-100, 0, 100, 200, 300, 400, 500, 600], format: (v) => num(v), label: 'Difference in birth weight (g), with 95% CI', tickLen: 4 });
   }
@@ -547,13 +553,12 @@ function power(root) {
     text(s, x(0), y(0.4) - 8, 'H₀', { 'text-anchor': 'middle', class: 'lbl-strong' });
     text(s, x(delta), y(0.4) - 8, 'H₁', { 'text-anchor': 'middle', class: 'lbl-strong c-plum' });
     for (const v of [-c, c]) el('line', { x1: x(v), x2: x(v), y1: y(0), y2: 36, class: 's-ink', 'stroke-dasharray': '4 3' }, s);
-    text(s, x(c) + 4, 24, `Reject H₀ beyond ±${num(c, 2)}`, { class: 'tick' });
     axisX(s, x, 202, { values: [-2, 0, 2, 4, 6, 8], format: (v) => num(v), label: 'Test statistic', tickLen: 4 });
     ro.set([
       ['Power', pct(pw), 'hl-green'],
       ['β, Type II error', pct(1 - pw)],
       ['α, Type I error', pct(alpha), 'hl-red'],
-      ['Groups', sizeText()],
+      ['Reject H₀ beyond', `±${num(c, 2)}`],
     ]);
   }
   draw();
@@ -599,7 +604,7 @@ function pSimulation(root) {
       const e = ps.length / 20;
       el('line', { x1: x(0), x2: x(1), y1: y(e), y2: y(e), class: 's-ink', 'stroke-dasharray': '5 4' }, s);
     }
-    axisX(s, x, 212, { values: [0, 0.05, 0.2, 0.4, 0.6, 0.8, 1], format: (v) => (v === 0 || v === 1 ? String(v) : num(v, 2)), label: 'p-value', tickLen: 4 });
+    axisX(s, x, 212, { values: [0, 0.2, 0.4, 0.6, 0.8, 1], format: (v) => (v === 0 || v === 1 ? String(v) : num(v, 1)), label: 'p-value (the first bar: below 0.05)', tickLen: 4 });
     const k = ps.filter((p) => p < 0.05).length;
     ro.set([
       ['Studies', num(ps.length)],
@@ -619,7 +624,7 @@ function permutation(root) {
   const values = [...non, ...smk];
   const truth = values.map((_, i) => (i < 115 ? 0 : 1));
   let labels = [...truth], diffs = [], stop = () => {};
-  const r = S.rng(41), rj = S.rng(4);
+  const r = S.rng(43), rj = S.rng(4);
   const jit = values.map(() => (rj() - 0.5) * 22);
   const obs = S.mean(non) - S.mean(smk);
   const diffOf = (lab) => {
@@ -874,9 +879,9 @@ function hwe(root) {
       el('path', { d: line(Array.from({ length: 51 }, (_, i) => [x(i / 50), y(f(i / 50))])), class: `${cls} f-none`, 'stroke-width': 2.5 }, s);
       el('circle', { cx: x(p), cy: y(f(p)), r: 5, class: cls.replace('s-', 'f-') }, s);
     }
-    text(s, x(0.9), y(0.81) - 6, 'AA', { class: 'lbl c-plum', 'text-anchor': 'middle' });
-    text(s, x(0.5), y(0.5) - 8, 'GA', { class: 'lbl c-orange', 'text-anchor': 'middle' });
-    text(s, x(0.1), y(0.81) - 6, 'GG', { class: 'lbl c-blue', 'text-anchor': 'middle' });
+    text(s, x(0.84) - 8, y(0.84 ** 2) + 4, 'AA', { class: 'lbl c-plum', 'text-anchor': 'end' });
+    text(s, x(0.5), y(0.5) - 10, 'GA', { class: 'lbl c-orange', 'text-anchor': 'middle' });
+    text(s, x(0.16) + 8, y(0.84 ** 2) + 4, 'GG', { class: 'lbl c-blue' });
     el('line', { x1: x(p), x2: x(p), y1: y(0), y2: y(1), class: 's-ink', 'stroke-dasharray': '4 3' }, s);
     axisX(s, x, 218, { values: [0, 0.25, 0.5, 0.75, 1], format: (v) => num(v, 2), label: 'Frequency of allele A (p)', tickLen: 4 });
     // right: FAMuSS, observed against expected

@@ -13,8 +13,11 @@ export const CONFIG = {
   session: '2026-w4',
 
   // How often phones and the presenter's page ask the server what is happening, in ms.
-  // Phones add up to 1.5 s at random, so that they don't all ask at once.
-  pollStudentMs: 5000,
+  // Phones wait pollStudentMs plus up to pollJitterMs at random, so that they don't all ask
+  // at once. With 60 phones that is about 9 requests a second, well within Google's limits
+  // (see dev/load-test.mjs). Shorter waits make phones follow the slides faster.
+  pollStudentMs: 6000,
+  pollJitterMs: 2000,
   pollPresenterMs: 2000,
 };
 

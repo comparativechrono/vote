@@ -32,6 +32,10 @@ const gs = loadAppsScript(fs.readFileSync(path.join(root, 'apps-script/Code.gs')
 });
 
 const stats = { requests: 0, refused: 0, active: 0, maxActive: 0, byAction: {}, started: Date.now() };
+// how many requests are running, sampled ten times a second
+let samples = [];
+setInterval(() => { samples.push(stats.active); if (samples.length > 36000) samples.shift(); }, 100).unref();
+const quantile = (p) => { const s = [...samples].sort((a, b) => a - b); return s.length ? s[Math.min(s.length - 1, Math.floor(p * s.length))] : 0; };
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -92,9 +96,11 @@ http.createServer((req, res) => {
     const secs = (Date.now() - stats.started) / 1000;
     const bytes = Object.entries(props.getProperties()).reduce((n, [k, v]) => n + k.length + v.length, 0);
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-    res.end(JSON.stringify({ ...stats, perSecond: +(stats.requests / secs).toFixed(2), storageBytes: bytes, sheets: [...sheet.sheets.keys()] }, null, 1));
+    const atOnce = { median: quantile(0.5), p95: quantile(0.95), p99: quantile(0.99), max: stats.maxActive };
+    res.end(JSON.stringify({ ...stats, atOnce, perSecond: +(stats.requests / secs).toFixed(2), storageBytes: bytes, sheets: [...sheet.sheets.keys()] }, null, 1));
   } else if (url.pathname === '/stats/reset') {
     Object.assign(stats, { requests: 0, refused: 0, maxActive: stats.active, byAction: {}, started: Date.now() });
+    samples = [];
     res.writeHead(204, { 'Access-Control-Allow-Origin': '*' });
     res.end();
   } else {

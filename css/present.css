@@ -93,7 +93,9 @@ body.presenter { background: var(--surround); }
 .waiting-n { font-size: 24px; color: var(--muted); }
 .waiting-n b { font-size: 64px; color: var(--ink); font-weight: 600; margin-right: 6px; }
 .waiting p:last-child { font-size: 20px; color: var(--muted); margin-top: 10px; }
-.q-body .wall { column-width: 340px; font-size: 19px; }
+#stage[data-kind='text'] .fitbox { height: 100%; }
+#stage[data-kind='text'] .q-body { flex: 1; min-height: 0; overflow: auto; padding-right: 4px; }
+.q-body .wall { column-width: 330px; font-size: 18px; }
 
 /* end */
 .s-end { height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 22px; }
@@ -148,13 +150,14 @@ body.presenter { background: var(--surround); }
 .menu-head { display: flex; align-items: baseline; gap: 24px; margin-bottom: 16px; }
 .menu-head h2 { font-size: 26px; font-weight: 600; }
 .menu-head p { font-size: 15px; color: var(--muted); }
-.menu-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 22px; }
-.menu-sec h3 { font-size: 15px; font-weight: 600; color: var(--plum-ink); margin-bottom: 4px; }
+.menu-grid { column-count: 4; column-gap: 26px; }
+.menu-sec { break-inside: avoid; margin-bottom: 14px; }
+.menu-sec h3 { font-size: 15px; font-weight: 600; color: var(--plum-ink); margin-bottom: 3px; }
 .menu-sec h3 span { font-weight: 400; color: var(--muted); }
 .menu-sec ol { list-style: none; padding: 0; }
 .menu-item {
-  display: flex; gap: 8px; width: 100%; padding: 2px 6px; border: 0; border-radius: 4px;
-  background: transparent; text-align: left; font-size: 13px; line-height: 1.35; cursor: pointer; color: var(--ink);
+  display: flex; gap: 8px; width: 100%; padding: 1px 6px; border: 0; border-radius: 4px;
+  background: transparent; text-align: left; font-size: 13px; line-height: 1.32; cursor: pointer; color: var(--ink);
 }
 .menu-item:hover { background: var(--surround); }
 .menu-item.now { background: var(--plum-tint); }
@@ -204,6 +207,3 @@ body.presenter { background: var(--surround); }
 .set-out.bad { color: var(--red-ink); }
 .set-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
 
-#corner { position: fixed; right: 10px; bottom: 8px; display: flex; gap: 6px; opacity: 0.35; }
-#corner:hover, #corner:focus-within { opacity: 1; }
-:fullscreen #corner { display: none; }
