@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7F0055">
+  <meta name="description" content="Vote on the questions of the GM2 recap lecture, and revise them afterwards.">
+  <title>GM2 recap</title>
+  <link rel="preload" href="fonts/RecapSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/student.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%237F0055'/%3E%3C/svg%3E">
+</head>
+<body class="student">
+  <header class="bar">
+    <a class="brand" href="./">GM2 recap</a>
+    <span id="net" class="net" role="status">Connecting…</span>
+    <button id="mode-btn" type="button" class="btn btn-small btn-quiet">Revise on your own</button>
+  </header>
+  <main id="main" aria-live="polite">
+    <article class="panel"><h1>Loading…</h1></article>
+  </main>
+  <section id="composer" class="composer" aria-label="Comments"></section>
+  <footer class="foot">Anonymous: your phone gets a random number, and no names are kept.</footer>
+  <noscript><p class="foot">This page needs JavaScript to show the questions.</p></noscript>
+  <script type="module" src="js/student.js"></script>
+</body>
+</html>
