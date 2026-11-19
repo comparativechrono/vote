@@ -4,7 +4,7 @@
 export const CONFIG = {
   // The web app's address, ending in /exec. Leave it empty for demo mode, where votes stay
   // in one browser: open the presenter page and a few student tabs side by side to try it.
-  backendUrl: '',
+  backendUrl: 'https://script.google.com/macros/s/AKfycbzuojPM2022oBhdpFawI1j5w97Af8wicsyOci9P-8tumSgVjx3bLJ3adYa60fxlbP-8/exec',
 
   // The address the QR code shows. Empty: the student page next to the presenter page.
   joinUrl: '',
