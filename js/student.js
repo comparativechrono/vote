@@ -6,7 +6,9 @@ import { connect, newVoterId } from './api.js';
 import { DECK, SLIDES, byId } from './content.js';
 import { mountDemo } from './demos.js';
 import { h, $, num } from './ui.js';
-import { optionRows, numberPlot, sectionOf, weekLabel, rich } from './render.js';
+import { optionRows, numberPlot, sectionOf, weekLabel, rich, numberQuestions } from './render.js';
+
+numberQuestions(CONFIG.lectureWeeks);
 
 const URL_ = backendUrl();
 const DEMO = !URL_;
@@ -312,6 +314,12 @@ const composer = (() => {
 // ---------------------------------------------------------------- revising on your own
 
 const REVISE = SLIDES.filter((s) => s.type === 'recap' || (s.type === 'question' && (s.kind === 'choice' || s.kind === 'number')));
+// Revising starts at the newest week of the lecture; the menu reaches the others.
+{
+  const weeks = (CONFIG.lectureWeeks || []).length ? CONFIG.lectureWeeks : SLIDES.map((s) => sectionOf(s).week || 0);
+  const newest = Math.max(...weeks);
+  L.reviseIndex = Math.max(0, REVISE.findIndex((s) => sectionOf(s).week === newest));
+}
 
 function check(value) {
   const s = view.s;

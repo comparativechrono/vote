@@ -10,7 +10,11 @@ export const CONFIG = {
   joinUrl: '',
 
   // Votes are kept per session. Use a new name for each lecture (letters, digits, - and _).
-  session: '2026-w4',
+  session: '2026-w5',
+
+  // The weeks this lecture goes through, in order, between the start and the wrap-up slides.
+  // The other weeks stay one click away (M, Sections) and on students' phones. [] = every week.
+  lectureWeeks: [4],
 
   // How often phones and the presenter's page ask the server what is happening, in ms.
   // Phones wait pollStudentMs plus up to pollJitterMs at random, so that they don't all ask
@@ -44,11 +48,21 @@ export function joinUrl(api) {
 /** The address without https:// and a trailing slash, for people to read and type. */
 export const shortUrl = (href) => href.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
-/** Presenter settings remembered in this browser: { url, key, session }. */
+/**
+ * Presenter settings remembered in this browser: { url, key, session }. A session or address
+ * saved before config.js changed gives way to the new config.js, so a new lecture's session
+ * takes effect without anyone opening Settings. The key is kept.
+ */
 const KEY = 'gm2:presenter';
 export function loadPresenter() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; }
+  let s;
+  try { s = JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; }
+  if (s.configSession !== CONFIG.session) delete s.session;
+  if (s.configUrl !== CONFIG.backendUrl) delete s.url;
+  return s;
 }
 export function savePresenter(s) {
-  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* private window: settings last this visit */ }
+  try {
+    localStorage.setItem(KEY, JSON.stringify({ ...s, configSession: CONFIG.session, configUrl: CONFIG.backendUrl }));
+  } catch { /* private window: settings last this visit */ }
 }

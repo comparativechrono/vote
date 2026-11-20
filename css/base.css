@@ -44,6 +44,7 @@ h1, h2, h3, p, ol, ul, dl, figure, blockquote { margin: 0; }
 button, input, select, textarea { font: inherit; color: inherit; }
 code { font-family: var(--mono); font-size: 0.92em; letter-spacing: -0.01em; }
 b, strong { font-weight: 600; }
+sub, sup { font-size: 0.72em; line-height: 0; }
 [hidden] { display: none !important; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -87,6 +88,26 @@ b, strong { font-weight: 600; }
 .readout .hl-green dd { color: var(--green-ink); }
 .readout .hl-red dd { color: var(--red-ink); }
 .demo-note { font-size: 13px; color: var(--muted); }
+.demo-key { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 14px; color: var(--muted); }
+.demo-key span { display: inline-flex; align-items: center; gap: 6px; }
+.demo-key i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; }
+.k-blue { background: var(--blue); }
+.k-orange { background: var(--orange); }
+.k-green { background: var(--green); }
+table.coded { border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; align-self: flex-start; }
+table.coded th, table.coded td { padding: 4px 16px; border-bottom: 1px solid var(--hair); text-align: center; }
+table.coded th[scope='row'] { text-align: left; font-weight: 500; color: var(--muted); padding-left: 0; }
+table.coded thead th { font-weight: 600; }
+pre.r-out {
+  margin: 0; padding: 10px 12px; border-radius: 6px; background: var(--surround);
+  font-family: var(--mono); font-size: 13px; line-height: 1.45; white-space: pre; overflow-x: auto;
+}
+.report { font-size: 18px; line-height: 1.6; }
+.rp { border-radius: 3px; transition: background-color 250ms; }
+.rp.lit { background: var(--plum-tint); box-shadow: 0 0 0 3px var(--plum-tint); }
+.report-parts { display: flex; flex-wrap: wrap; gap: 6px; }
+.report-parts .seg-btn { border: 1px solid var(--hair); border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { .rp { transition: none; } }
 
 /* ------------------------------------------------------------------ graphs */
 
@@ -98,6 +119,7 @@ b, strong { font-weight: 600; }
 .chart .lbl { font-size: 16px; fill: var(--ink); }
 .chart .lbl-strong { font-size: 16px; font-weight: 600; fill: var(--ink); }
 .chart .big { font-size: 34px; font-weight: 600; }
+.chart .halo { paint-order: stroke; stroke: var(--paper); stroke-width: 5px; stroke-linejoin: round; }
 .chart .c-plum { fill: var(--plum-ink); }
 .chart .c-blue { fill: var(--blue); }
 .chart .c-orange { fill: var(--orange-ink); }
@@ -106,6 +128,7 @@ b, strong { font-weight: 600; }
 .chart .c-muted { fill: var(--muted); }
 .chart .c-paper { fill: #fff; }
 .f-none { fill: none; }
+.f-surround { fill: var(--surround); }
 .f-ink { fill: var(--ink); } .f-muted { fill: var(--muted); } .f-hair { fill: var(--hair); } .f-paper { fill: var(--paper); }
 .f-plum { fill: var(--plum); } .f-blue { fill: var(--blue); } .f-orange { fill: var(--orange); }
 .f-green { fill: var(--green); } .f-red { fill: var(--red); }

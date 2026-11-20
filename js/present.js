@@ -6,12 +6,13 @@ import { DECK, SLIDES } from './content.js';
 import { mountDemo } from './demos.js';
 import { h, $, num, toast } from './ui.js';
 import {
-  optionRows, numberPlot, textWall, questionSpec, sectionOf, weekLabel, rich, sectionStarts, shortLabel,
+  optionRows, numberPlot, textWall, questionSpec, sectionOf, weekLabel, rich, sectionStarts, shortLabel, numberQuestions,
 } from './render.js';
 import qrcode from './vendor/qrcode.mjs';
 
 // ---------------------------------------------------------------- settings and state
 
+numberQuestions(CONFIG.lectureWeeks);
 const saved = loadPresenter();
 const P = {
   url: backendUrl(saved.url || undefined),
@@ -60,6 +61,18 @@ function loadPos() {
 }
 
 const slide = () => SLIDES[S.i];
+
+// The lecture runs through the start, the weeks in CONFIG.lectureWeeks and the wrap-up, in that
+// order. Slides of other weeks stay one click away; from one of them, the arrows move through
+// the whole deck until they come back to the lecture's slides.
+const weekOf = (s) => sectionOf(s).week || 0;
+const WEEKS = [...new Set(SLIDES.map(weekOf).filter(Boolean))];
+const LECTURE = (CONFIG.lectureWeeks || []).filter((w) => WEEKS.includes(w)).length
+  ? CONFIG.lectureWeeks.filter((w) => WEEKS.includes(w)) : WEEKS;
+const inLecture = (s) => !weekOf(s) || LECTURE.includes(weekOf(s));
+const ORDER = SLIDES.map((_, i) => i).filter((i) => inLecture(SLIDES[i]));
+const firstOfWeek = (w) => SLIDES.findIndex((s) => weekOf(s) === w);
+const topic = (w) => (DECK.weeks && DECK.weeks[w] ? DECK.weeks[w] : '');
 const isQ = (s = slide()) => s.type === 'question';
 const maxStage = (s) => (s.kind === 'choice' || s.kind === 'number' ? 2 : 1);
 const stageOf = (s = slide()) => (isQ(s) ? S.stage[s.id] || 0 : 0);
@@ -82,11 +95,24 @@ scaleStage();
 // ---------------------------------------------------------------- the rail of sections
 
 const rail = $('#rail');
-const cells = [];
+let cells = [];
+let railFor = null;
+/** The rail shows the lecture's weeks, and the week on screen, slide by slide; other weeks fold up. */
 function buildRail() {
+  const open = new Set([...LECTURE, weekOf(slide())]);
+  railFor = [...open].sort().join(',');
   rail.replaceChildren();
+  cells = [];
   let week = null;
   for (const sec of DECK.sections) {
+    if (sec.week && !open.has(sec.week)) {
+      if (sec.week !== week) {
+        week = sec.week;
+        const w = week;
+        rail.append(h('button', { type: 'button', class: 'rail-fold', tabindex: '-1', title: `Week ${w}: ${topic(w)}`, onclick: () => go(firstOfWeek(w)) }, `Week ${w}`));
+      }
+      continue;
+    }
     if (sec.week && sec.week !== week) {
       week = sec.week;
       rail.append(h('span', { class: 'rail-week' }, `Week ${week}`));
@@ -105,8 +131,15 @@ function buildRail() {
     }
     rail.append(group);
   }
+  // narrower squares when there are many, so that the rail always fits
+  for (let w = 11; w >= 3; w--) {
+    rail.style.setProperty('--cell', `${w}px`);
+    if (rail.scrollWidth <= rail.clientWidth) break;
+  }
 }
 function updateRail() {
+  const open = [...new Set([...LECTURE, weekOf(slide())])].sort().join(',');
+  if (open !== railFor) buildRail();
   cells.forEach((c, i) => {
     c.classList.toggle('now', i === S.i);
     c.classList.toggle('done', i < S.i);
@@ -156,6 +189,14 @@ const joinHref = () => joinUrl(P.url);
 /** The address to show: without any ?api=..., which only the QR code needs. */
 const joinText = () => shortUrl(joinHref().split('?')[0]);
 
+/** "Week 4: linear and logistic regression, from Leonardo’s lectures" */
+function lectureLine() {
+  const lower = (t) => t.charAt(0).toLowerCase() + t.slice(1);
+  if (LECTURE.length === 1) return `Week ${LECTURE[0]}: ${lower(topic(LECTURE[0]))}, from Leonardo’s lectures`;
+  const ws = LECTURE.length === 2 ? LECTURE.join(' and ') : `${LECTURE.slice(0, -1).join(', ')} and ${LECTURE[LECTURE.length - 1]}`;
+  return `Weeks ${ws} of Leonardo’s lectures`;
+}
+
 function titleSlide() {
   const dots = h('div', { class: 'dots', 'aria-hidden': 'true' });
   const count = h('p', { class: 'joined' });
@@ -164,7 +205,7 @@ function titleSlide() {
     h('div', { class: 't-left' },
       h('p', { class: 't-course' }, DECK.course),
       h('h1', null, DECK.title),
-      h('p', { class: 't-sub' }, DECK.subtitle),
+      h('p', { class: 't-sub' }, lectureLine()),
       h('div', { class: 't-joined' }, count, dots)),
     h('div', { class: 't-right' },
       qrSvg(joinHref(), 'qr'),
@@ -309,7 +350,8 @@ function updateFooter() {
   for (const t of [tools.results, tools.answer]) t.classList.remove('next');
   if (q && st === 0) tools.results.classList.add('next');
   if (q && st === 1 && maxStage(s) === 2) tools.answer.classList.add('next');
-  tools.count.textContent = `${S.i + 1} / ${SLIDES.length}`;
+  const pos = ORDER.indexOf(S.i);
+  tools.count.textContent = pos >= 0 ? `${pos + 1} / ${ORDER.length}` : `Week ${weekOf(slide())}`;
   // unseen comments
   const fresh = visibleComments().filter((c) => c.t > S.seenT).length;
   tools.badge.hidden = !fresh || S.overlay === 'comments';
@@ -360,19 +402,26 @@ function setStage(st) {
   savePos();
 }
 
+/** One slide on (dir 1) or back (dir -1): along the lecture's slides, or through the deck from other weeks. */
+function step(dir) {
+  const pos = ORDER.indexOf(S.i);
+  if (pos >= 0) { if (ORDER[pos + dir] !== undefined) go(ORDER[pos + dir]); }
+  else go(S.i + dir);
+}
 function next() {
   const s = slide();
   if (isQ(s) && stageOf(s) < maxStage(s)) setStage(stageOf(s) + 1);
-  else go(S.i + 1);
+  else step(1);
 }
 function prev() {
   const s = slide();
   if (isQ(s) && stageOf(s) > 0) setStage(stageOf(s) - 1);
-  else go(S.i - 1);
+  else step(-1);
 }
 function jumpSection(dir) {
-  const starts = sectionStarts();
-  const cur = starts.filter((x) => x <= S.i).pop();
+  const here = inLecture(slide());
+  const starts = sectionStarts().filter((i) => (here ? inLecture(SLIDES[i]) : true));
+  const cur = starts.filter((x) => x <= S.i).pop() ?? starts[0];
   if (dir < 0) go(S.i > cur ? cur : starts[Math.max(0, starts.indexOf(cur) - 1)]);
   else go(starts[Math.min(starts.length - 1, starts.indexOf(cur) + 1)]);
 }
@@ -500,12 +549,19 @@ function toggleOverlay(name) {
   updateFooter();
 }
 
-function renderMenu() {
+function renderMenu(week) {
   const box = $('#menu');
   box.hidden = false;
+  const shown = week || weekOf(slide()) || LECTURE[LECTURE.length - 1];
+  const tabs = h('div', { class: 'menu-tabs', role: 'group', 'aria-label': 'Weeks' }, WEEKS.map((w) => h('button', {
+    type: 'button', class: 'seg-btn', 'aria-pressed': String(w === shown), title: topic(w),
+    onclick: () => renderMenu(w),
+  }, `Week ${w}`, LECTURE.includes(w) ? h('span', { class: 'menu-today' }, ' today') : null)));
+  const sections = DECK.sections.filter((sec) => !sec.week || sec.week === shown);
   box.replaceChildren(
-    h('div', { class: 'menu-head' }, h('h2', null, 'Sections'), h('p', null, 'Click a slide, or type a question’s number and press Enter. Esc closes this.')),
-    h('div', { class: 'menu-grid' }, DECK.sections.map((sec) => h('section', { class: 'menu-sec' },
+    h('div', { class: 'menu-head' }, h('h2', null, 'Sections'), tabs,
+      h('p', null, 'Click a slide, or type a question’s number and press Enter. Esc closes this.')),
+    h('div', { class: 'menu-grid' }, sections.map((sec) => h('section', { class: 'menu-sec' },
       h('h3', null, sec.label, sec.week ? h('span', null, ` Week ${sec.week}`) : null),
       h('ol', null, sec.slides.map((x) => {
         const i = SLIDES.findIndex((y) => y.id === x.id);
@@ -716,7 +772,7 @@ function onKey(e) {
     ArrowRight: next, PageDown: next, ' ': next,
     ArrowLeft: prev, PageUp: prev, Backspace: prev,
     ArrowDown: () => jumpSection(1), ArrowUp: () => jumpSection(-1),
-    Home: () => go(0), End: () => go(SLIDES.length - 1),
+    Home: () => go(ORDER[0]), End: () => go(ORDER[ORDER.length - 1]),
     r: toggleResults, a: toggleAnswer, v: toggleVoting,
     c: () => toggleOverlay('comments'), m: () => toggleOverlay('menu'), j: () => toggleOverlay('qr'), '?': () => toggleOverlay('help'),
     f: () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {})),
