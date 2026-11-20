@@ -267,6 +267,89 @@ export function kruskal(groups) {
   return { h: H, df: groups.length - 1, p: chi2Upper(H, groups.length - 1) };
 }
 
+// ---------------------------------------------------------------- regression
+
+/** Solves A x = b for a small square matrix A (Gaussian elimination with partial pivoting). */
+export function solve(A, b) {
+  const n = b.length;
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let p = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = c + 1; r < n; r++) {
+      const f = M[r][c] / M[c][c];
+      for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
+    }
+  }
+  const x = new Array(n).fill(0);
+  for (let r = n - 1; r >= 0; r--) {
+    let s = M[r][n];
+    for (let k = r + 1; k < n; k++) s -= M[r][k] * x[k];
+    x[r] = s / M[r][r];
+  }
+  return x;
+}
+
+export function invert(A) {
+  const n = A.length;
+  const cols = A.map((_, j) => solve(A, A.map((__, i) => (i === j ? 1 : 0))));
+  return A.map((_, i) => cols.map((c) => c[i]));
+}
+
+const crossprod = (X, w) => X[0].map((_, a) => X[0].map((__, b) => {
+  let s = 0;
+  for (let i = 0; i < X.length; i++) s += (w ? w[i] : 1) * X[i][a] * X[i][b];
+  return s;
+}));
+
+/** Least squares regression of y on the columns of X, as R's lm(): give X a column of 1s for the intercept. */
+export function ols(X, y) {
+  const n = y.length, p = X[0].length;
+  const XtX = crossprod(X);
+  const Xty = X[0].map((_, a) => { let s = 0; for (let i = 0; i < n; i++) s += X[i][a] * y[i]; return s; });
+  const beta = solve(XtX, Xty);
+  const fitted = X.map((row) => row.reduce((s, v, j) => s + v * beta[j], 0));
+  const resid = y.map((v, i) => v - fitted[i]);
+  const rss = sum(resid.map((r) => r * r));
+  const df = n - p, s2 = rss / df;
+  const inv = invert(XtX);
+  const se = inv.map((row, j) => Math.sqrt(row[j] * s2));
+  const t = beta.map((b, j) => b / se[j]);
+  const ybar = mean(y);
+  const tss = sum(y.map((v) => (v - ybar) ** 2));
+  return { beta, se, t, p: t.map((v) => tP2(v, df)), fitted, resid, rss, tss, df, n, sigma: Math.sqrt(s2), r2: 1 - rss / tss, inv };
+}
+
+/** The F-test of two nested linear models, as R's anova(small, big). */
+export function nestedF(small, big) {
+  const d1 = small.df - big.df, d2 = big.df;
+  const f = (small.rss - big.rss) / d1 / (big.rss / d2);
+  return { f, d1, d2, p: fUpper(f, d1, d2) };
+}
+
+/**
+ * Logistic regression, as R's glm(family = binomial), by Newton–Raphson (iteratively reweighted
+ * least squares). y counts the events out of m trials (m = 1 for 0/1 data). Wald standard errors.
+ */
+export function logitFit(X, y, m) {
+  const n = y.length, p = X[0].length;
+  const trials = m || y.map(() => 1);
+  let beta = new Array(p).fill(0), inv = null;
+  for (let it = 0; it < 60; it++) {
+    const mu = X.map((row) => 1 / (1 + Math.exp(-row.reduce((s, v, j) => s + v * beta[j], 0))));
+    const w = mu.map((u, i) => trials[i] * u * (1 - u));
+    inv = invert(crossprod(X, w));
+    const score = X[0].map((_, a) => { let s = 0; for (let i = 0; i < n; i++) s += X[i][a] * (y[i] - trials[i] * mu[i]); return s; });
+    const step = inv.map((row) => row.reduce((s, v, j) => s + v * score[j], 0));
+    beta = beta.map((b, j) => b + step[j]);
+    if (Math.max(...step.map(Math.abs)) < 1e-10) break;
+  }
+  const se = inv.map((row, j) => Math.sqrt(row[j]));
+  const z = beta.map((b, j) => b / se[j]);
+  return { beta, se, z, p: z.map((v) => 2 * (1 - normCdf(Math.abs(v)))) };
+}
+
 /** Shuffle an array in place (Fisher–Yates). */
 export function shuffle(xs, r = Math.random) {
   for (let i = xs.length - 1; i > 0; i--) {

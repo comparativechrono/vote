@@ -1,6 +1,6 @@
-# Live recap
+# GM2 recapped
 
-An interactive recap lecture for GM2 Research and Statistical Skills: the material of Leonardo’s lectures in weeks 2 and 3, as slides with interactive graphs, 51 questions that students answer on their phones, and live results.
+An interactive recap of Leonardo’s lectures for GM2 Research and Statistical Skills, built up week by week: slides with interactive graphs, questions that students answer on their phones, and live results. It covers weeks 2 to 4 so far: describing data and uncertainty, hypothesis tests, and linear and logistic regression.
 
 - **`present.html`** is what you show: the recap as slides, a graph to play with on each recap slide, the questions with their live results, the QR code and the comments sent from phones.
 - **`index.html`** is what students open by scanning the QR code: it follows your slides, takes their votes, numbers, free-text answers and comments, and afterwards lets them revise every slide and question on their own.
@@ -73,11 +73,19 @@ Phones show each recap slide’s points as you reach them, with *Try the graph y
 
 - In Settings, **Copy votes to the sheet** (or **Live recap ▸ Export the current session** in the sheet) writes the session’s votes and comments into two new tabs of the Google Sheet.
 - Students can keep using the page to revise: **Revise on your own** shows every recap slide and question, and checks their answers on the phone.
-- For the next lecture, use a new **session** name (Settings, or `session` in `js/config.js`), so its votes are kept apart. Once a session is exported you can delete it with **Live recap ▸ Clear an old session…**. The script’s storage holds about 500 KB, roughly two lectures of votes; the presenter page warns when it is getting full.
+- Each lecture has its own **session** (`session` in `js/config.js`), so its votes are kept apart. Once a session is exported you can delete it with **Live recap ▸ Clear an old session…**. The script’s storage holds about 500 KB, roughly two lectures of votes; the presenter page warns when it is getting full.
+
+## Each week
+
+1. Add the new week’s sections to `js/content.js`, with `week: 5` and so on, before the wrap-up section; add the week’s topic to `weeks` at the top, and any new graphs to a file of their own, such as `js/demos-week5.js`.
+2. In `js/config.js`, set `lectureWeeks` to the week the lecture recaps, for example `[5]`, and give `session` a new name, for example `'2026-w6'`.
+3. Update the confidence questions and the last slide (`conf-start`, `conf-end` and `end` in `js/content.js`) for the week’s topic.
+
+The presenter’s slides then run from the title through that week to the wrap-up, numbered from question 1. The earlier weeks stay one click away: press **M** and pick a week, or click a week in the bar at the top. Students’ phones open *Revise on your own* at the newest week, and keep every earlier week.
 
 ## Change the questions
 
-Everything on the slides is in [`js/content.js`](js/content.js): sections, recap slides (title, points, the graph to show) and questions (text, options, the index of the right answer from 0, the explanation, and where the material is in Leonardo’s lectures). Keep a question’s `id` once people have voted on it, because votes are stored under it. The graphs are in [`js/demos.js`](js/demos.js).
+Everything on the slides is in [`js/content.js`](js/content.js): sections, recap slides (title, points, the graph to show) and questions (text, options, the index of the right answer from 0, the explanation, and where the material is in Leonardo’s lectures). Keep a question’s `id` once people have voted on it, because votes are stored under it. The graphs of weeks 2 and 3 are in [`js/demos.js`](js/demos.js), and those of week 4 in [`js/demos-week4.js`](js/demos-week4.js).
 
 If you change `apps-script/Code.gs`, paste it into the Apps Script editor again and choose **Deploy ▸ Manage deployments**, the pencil icon, **Version: New version**, **Deploy**. The web app keeps its URL. (The web app runs the last deployed version, not the code in the editor.)
 
@@ -99,11 +107,12 @@ If you change `apps-script/Code.gs`, paste it into the Apps Script editor again 
 |---|---|
 | `present.html`, `index.html` | The presenter’s page and the students’ page |
 | `js/content.js` | The recap: sections, slides and questions |
-| `js/demos.js`, `js/stats.js` | The interactive graphs, and the statistics they compute (checked against R and SciPy) |
+| `js/demos.js`, `js/demos-week4.js`, `js/demo-kit.js` | The interactive graphs, by week, and what they share |
+| `js/stats.js`, `js/data/birthwt.js` | The statistics the graphs compute (checked against R, SciPy and statsmodels), and the birthwt data |
 | `js/present.js`, `js/student.js`, `js/render.js` | The two pages, and what they share |
 | `js/api.js`, `js/gas-shim.js`, `js/config.js` | Talking to the web app, demo mode, settings |
 | `apps-script/Code.gs` | The web app, to paste into Apps Script |
 | `dev/` | The local server, the load test and the font script |
 | `css/`, `fonts/` | Styles and fonts |
 
-The graphs use the figures from Leonardo’s lectures; where a graph needs individual data points (birth weights, mothers’ weights, the ALL probe), they are simulated to match the lectures’ summaries, and the graph says so. Fonts and the QR code library are open source: see [THIRD_PARTY.md](THIRD_PARTY.md).
+The graphs use the figures from Leonardo’s lectures. Those of week 4 fit their models to the real birthwt data, so their numbers are the same as Leonardo’s R output. Some graphs of weeks 2 and 3 use individual data points (mothers’ weights, the ALL probe) simulated to match the lectures’ summaries, and say so. Fonts and the QR code library are open source: see [THIRD_PARTY.md](THIRD_PARTY.md).

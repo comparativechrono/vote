@@ -1,35 +1,13 @@
 // The interactive graphs on the recap slides. mountDemo(name, element) draws one; each is
 // self-contained and uses the same simulated or published numbers as Leonardo's lectures.
+// The graphs of weeks 2 and 3 are in this file; later weeks have files of their own.
 
 import { h, num, pct, pval, pnum, slider, choice, button, readout, animate, ease } from './ui.js';
 import { el, svg, clear, text, linear, ticks, line, area, axisX, axisY, bins } from './svg.js';
 import * as S from './stats.js';
 
-const W = 540;
-
-const pT2 = (t, df) => (df > 1000 ? 2 * (1 - S.normCdf(Math.abs(t))) : S.tP2(t, df));
-const code = (s) => `<code>${s}</code>`;
-
-function frame(root, H, label) {
-  const s = svg(W, H, label);
-  root.append(s);
-  return s;
-}
-function controls(root, ...items) {
-  const c = h('div', { class: 'demo-controls' }, items);
-  root.append(c);
-  return c;
-}
-function note(root, words) { root.append(h('p', { class: 'demo-note' }, words)); }
-const g = (parent, cls) => el('g', { class: cls || null }, parent);
-
-/** Normal values with exactly the given mean and SD (so the graphs match the lecture's figures). */
-function exactNormal(n, m, s, seed) {
-  const r = S.rng(seed);
-  const z = Array.from({ length: n }, () => S.randn(r));
-  const zm = S.mean(z), zs = S.sd(z);
-  return z.map((v) => m + (s * (v - zm)) / zs);
-}
+import { W, pT2, code, frame, controls, note, g, exactNormal } from './demo-kit.js';
+import { WEEK4_DEMOS } from './demos-week4.js';
 
 // ================================================================ describing data
 
@@ -923,7 +901,7 @@ function chooser(root) {
   const NOTES = {
     'Continuous|Two groups': [0, 't-test if the data are close to normal or the sample is large; Wilcoxon or a permutation test for small samples that are clearly not normal.'],
     'Continuous|Three or more groups': [1, 'Kruskal–Wallis for small samples that are clearly not normal. Then TukeyHSD() shows which groups differ.'],
-    'Continuous|A continuous measure': [3, 'Regression, next week: it unifies the tests of this week.'],
+    'Continuous|A continuous measure': [3, 'Regression, the topic of week 4: one framework that also covers the tests of week 3.'],
     'Categorical|Two groups': [2, 'Two categorical variables make a table: chi-square if every expected count is at least 5, otherwise Fisher.'],
     'Categorical|Three or more groups': [2, 'A 2 × 3 table, such as genotype by trait: chi-square on 2 df, or a trend test for a genetic model.'],
     'Categorical|A continuous measure': [4, 'Turn it round: for a binary outcome, logistic regression (week 4).'],
@@ -954,6 +932,7 @@ function chooser(root) {
 export const DEMOS = {
   meanMedian, normal, counts, sampling, coverage, alleles,
   pArea, pvalueSize, power, pSimulation, permutation, table2x2, anova, models, hwe, chooser,
+  ...WEEK4_DEMOS,
 };
 
 /** Draws demo `name` into element `root`. Returns { destroy() } to stop any animation. */

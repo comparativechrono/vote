@@ -164,6 +164,18 @@ export function textWall(comments, { onhide } = {}) {
 
 // ---------------------------------------------------------------- the deck
 
+/**
+ * Numbers the questions in the lecture's order: the start, the lecture's weeks and the wrap-up
+ * first, then the other weeks. Both pages call it, so a question has the same number on each.
+ */
+export function numberQuestions(lectureWeeks) {
+  const weeks = lectureWeeks && lectureWeeks.length ? lectureWeeks : null;
+  const inLecture = (s) => !weeks || !sectionOf(s).week || weeks.includes(sectionOf(s).week);
+  let n = 0;
+  for (const s of SLIDES) if (s.type === 'question' && inLecture(s)) s.number = ++n;
+  for (const s of SLIDES) if (s.type === 'question' && !inLecture(s)) s.number = ++n;
+}
+
 /** Where a slide is: its index, and the index of the first slide of its section. */
 export function indexOf(id) { return SLIDES.findIndex((s) => s.id === id); }
 

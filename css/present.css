@@ -24,9 +24,14 @@ body.presenter { background: var(--surround); }
 .rail-week:first-child { margin-left: 0; }
 .rail-sec { display: flex; gap: 3px; align-items: center; height: 20px; padding: 0 1px; }
 .rail-cell {
-  width: 11px; height: 8px; padding: 0; border: 0; border-radius: 2px;
+  width: var(--cell, 11px); height: 8px; padding: 0; border: 0; border-radius: 2px;
   background: var(--hair); cursor: pointer;
 }
+.rail-fold {
+  flex: none; height: 20px; padding: 0 9px; border: 1px solid var(--hair); border-radius: 10px;
+  background: var(--paper); color: var(--muted); font-size: 12px; line-height: 18px; cursor: pointer; white-space: nowrap;
+}
+.rail-fold:hover { color: var(--ink); border-color: var(--muted); }
 .rail-cell.is-q { height: 12px; }
 .rail-cell.done { background: #A9B0BC; }
 .rail-cell.now { background: var(--plum); height: 16px; }
@@ -147,7 +152,10 @@ body.presenter { background: var(--surround); }
 .overlay { position: absolute; z-index: 10; background: var(--paper); }
 
 #menu { inset: 0 0 64px 0; padding: 26px 40px 20px 64px; overflow: auto; }
-.menu-head { display: flex; align-items: baseline; gap: 24px; margin-bottom: 16px; }
+.menu-head { display: flex; align-items: center; gap: 24px; margin-bottom: 16px; flex-wrap: wrap; }
+.menu-tabs { display: inline-flex; border: 1px solid var(--hair); border-radius: 6px; overflow: hidden; }
+.menu-tabs .seg-btn { font-size: 15px; padding: 0.35em 0.9em; }
+.menu-today { font-size: 12px; opacity: 0.75; }
 .menu-head h2 { font-size: 26px; font-weight: 600; }
 .menu-head p { font-size: 15px; color: var(--muted); }
 .menu-grid { column-count: 4; column-gap: 26px; }
