@@ -3,7 +3,8 @@
 
 import { CONFIG, backendUrl } from './config.js';
 import { connect, newVoterId } from './api.js';
-import { DECK, SLIDES, byId } from './content.js';
+import { DECK, DECK_ID, SLIDES, byId, deckWith, deckHref } from './content.js';
+import { codeBlock } from './code.js';
 import { mountDemo } from './demos.js';
 import { h, $, num } from './ui.js';
 import { optionRows, numberPlot, sectionOf, weekLabel, rich, numberQuestions } from './render.js';
@@ -104,6 +105,9 @@ function renderLive() {
   L.slideId = st ? st.slide : null;
   document.body.dataset.mode = 'live';
   $('#mode-btn').textContent = 'Revise on your own';
+  // the presenter has opened another deck (say, the trains exercise): follow it there
+  const other = st && !s ? deckWith(st.slide) : null;
+  if (other && other !== DECK_ID) { window.location.replace(deckHref(other)); return; }
   if (!s) {
     main.replaceChildren(panel(h('h1', null, 'Waiting for the lecture'), h('p', null, 'Keep this page open. Questions appear here when the lecture reaches them.')));
   } else if (s.type === 'title') {
@@ -119,7 +123,7 @@ function renderLive() {
   } else {
     main.replaceChildren(panel(
       h('h1', null, s.title),
-      h('p', null, s.text),
+      rich('p', null, s.text),
       h('p', null, 'Every slide and question of the recap stays here, to revise when you like.'),
       h('button', { type: 'button', class: 'btn btn-primary', onclick: () => setMode('revise') }, 'Revise on your own')));
   }
@@ -142,6 +146,7 @@ function recapPanel(s) {
   });
   return panel(sectionLine(s), h('h1', null, s.title),
     h('ul', { class: 'points' }, s.points.map((p) => rich('li', null, p))),
+    s.code ? codeBlock(s.code, { copy: true }) : null,
     s.demo ? details : null,
     s.source ? h('p', { class: 'source' }, s.source) : null);
 }

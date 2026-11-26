@@ -215,3 +215,47 @@ body.presenter { background: var(--surround); }
 .set-out.bad { color: var(--red-ink); }
 .set-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
 
+
+/* ------------------------------------------------------------------ the trains exercise */
+
+.recap-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.recap-main pre.r-code { font-size: 14px; }
+
+/* a train on the rail, above the slide on screen */
+.rail-train { position: absolute; top: -13px; width: 30px; height: 13px; transform: translateX(-100%); transition: left 900ms cubic-bezier(0.45, 0, 0.25, 1); pointer-events: none; }
+
+/* a track across the bottom of the title and end slides */
+.s-title.has-train { padding-bottom: 64px; }
+.s-end.has-train { padding-bottom: 80px; }
+.s-end .end-text code { white-space: nowrap; font-size: 0.86em; color: var(--ink); }
+.train-strip {
+  position: absolute; left: -64px; right: -64px; bottom: 0; height: 58px; pointer-events: none;
+  background:
+    linear-gradient(var(--muted), var(--muted)) 0 48px / 100% 3px no-repeat,
+    repeating-linear-gradient(90deg, var(--hair) 0 10px, transparent 10px 22px) 0 52px / 100% 5px no-repeat;
+}
+.strip-car { position: absolute; left: 0; top: 1px; width: 110px; height: 49px; }
+.strip-train { width: 110px; height: 49px; display: block; }
+.strip-sign { position: absolute; top: 4px; font-size: 15px; }
+.board-sign {
+  left: 64px; display: flex; gap: 14px; padding: 5px 12px; border-radius: 6px;
+  background: var(--ink); color: var(--orange); font-family: var(--mono);
+}
+.board-sign b { font-weight: 400; color: #FFFFFF; animation: blink 2.4s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0.25; } }
+.running .strip-car { animation: run 11s linear infinite; }
+@keyframes run {
+  0% { transform: translateX(-160px); }
+  38% { transform: translateX(600px); }   /* waits at a signal */
+  62% { transform: translateX(600px); }
+  100% { transform: translateX(1450px); }
+}
+.arriving .strip-sign { left: 870px; padding: 4px 12px; border-radius: 6px; background: var(--ink); color: #FFFFFF; }
+.arriving .strip-car { transform: translateX(740px); animation: arrive 3.2s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+@keyframes arrive { from { transform: translateX(-160px); } }
+@media (prefers-reduced-motion: reduce) {
+  .running .strip-car { animation: none; transform: translateX(600px); }
+  .arriving .strip-car { animation: none; }
+  .board-sign b { animation: none; }
+  .rail-train { transition: none; }
+}

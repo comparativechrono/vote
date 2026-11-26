@@ -358,3 +358,58 @@ export function shuffle(xs, r = Math.random) {
   }
   return xs;
 }
+
+// ---------------------------------------------------------------- added for the trains exercise
+
+/** The Wilcoxon rank-sum test of a against b, as R's wilcox.test() with ties: the normal approximation with continuity correction. */
+export function wilcox(a, b) {
+  const all = [...a.map((v) => ({ v, g: 0 })), ...b.map((v) => ({ v, g: 1 }))].sort((p, q) => p.v - q.v);
+  const N = all.length, nx = a.length, ny = b.length;
+  let rx = 0, ties = 0;
+  for (let i = 0; i < N;) {
+    let j = i;
+    while (j + 1 < N && all[j + 1].v === all[i].v) j++;
+    const r = (i + j) / 2 + 1, t = j - i + 1;
+    for (let m = i; m <= j; m++) if (all[m].g === 0) rx += r;
+    ties += t ** 3 - t;
+    i = j + 1;
+  }
+  const W = rx - (nx * (nx + 1)) / 2;
+  const z0 = W - (nx * ny) / 2;
+  const sigma = Math.sqrt((nx * ny / 12) * ((nx + ny + 1) - ties / ((nx + ny) * (nx + ny - 1))));
+  const z = (z0 - Math.sign(z0) * 0.5) / sigma;
+  return { W, z, p: Math.min(1, 2 * Math.min(normCdf(z), 1 - normCdf(z))) };
+}
+
+/** The odds ratio of [[a, b], [c, d]] as R's fisher.test() gives it: the conditional MLE, and its exact 95% CI. */
+export function fisherOR(a, b, c, d) {
+  const m = a + c, n = b + d, k = a + b, x = a;
+  const lo = Math.max(0, k - n), hi = Math.min(k, m);
+  const sup = [];
+  for (let s = lo; s <= hi; s++) sup.push(s);
+  const logdc = sup.map((s) => lchoose(m, s) + lchoose(n, k - s));
+  const dens = (ncp) => {
+    const w = logdc.map((l, i) => l + Math.log(ncp) * sup[i]);
+    const top = Math.max(...w);
+    const e = w.map((v) => Math.exp(v - top));
+    const tot = sum(e);
+    return e.map((v) => v / tot);
+  };
+  const meanAt = (ncp) => sum(dens(ncp).map((p, i) => p * sup[i]));
+  const lower = (ncp) => sum(dens(ncp).filter((_, i) => sup[i] <= x));   // P(X <= x)
+  const upper = (ncp) => sum(dens(ncp).filter((_, i) => sup[i] >= x));   // P(X >= x)
+  // f(log ncp) - target changes sign once: bisection on the log scale
+  const root = (f, target, increasing) => {
+    let l = -30, h = 30;
+    for (let i = 0; i < 200; i++) {
+      const mid = (l + h) / 2;
+      const v = f(Math.exp(mid)) - target;
+      if ((v < 0) === increasing) l = mid; else h = mid;
+    }
+    return Math.exp((l + h) / 2);
+  };
+  const or = x === lo ? 0 : x === hi ? Infinity : root(meanAt, x, true);
+  const ciLo = x === lo ? 0 : root(upper, 0.025, true);
+  const ciHi = x === hi ? Infinity : root(lower, 0.025, false);
+  return { or, lo: ciLo, hi: ciHi };
+}

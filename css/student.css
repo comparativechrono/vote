@@ -104,3 +104,6 @@ textarea {
 .pager .btn { min-width: 7.5em; min-height: 46px; }
 
 .foot { text-align: center; font-size: 13px; color: var(--muted); padding: 8px 16px 18px; }
+
+/* the trains exercise: R code to copy */
+.panel pre.r-code { font-size: 13px; }
