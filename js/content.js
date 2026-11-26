@@ -12,13 +12,18 @@
 //   title, end
 //
 // source: where the slide's material is in Leonardo's lectures.
+//
+// Other decks, chosen with ?deck=<id> on both pages, live in their own files: js/deck-trains.js.
+
+import { TRAINS_DECK } from './deck-trains.js';
 
 const confidence = {
   kind: 'scale',
   labels: ['Not at all', 'A little', 'Somewhat', 'Fairly', 'Very'],
 };
 
-export const DECK = {
+const GM2_DECK = {
+  id: 'gm2',
   title: 'GM2 recapped',
   course: 'GM2 Research and Statistical Skills',
   // The topic of each week, from Leonardo's lectures. The title slide names the weeks of the
@@ -1323,6 +1328,24 @@ export const DECK = {
     },
   ],
 };
+
+// Every deck, by id. The weekly recap is the default; ?deck=trains opens the trains exercise.
+export const DECKS = { gm2: GM2_DECK, trains: TRAINS_DECK };
+const asked = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('deck') : null;
+export const DECK_ID = asked && DECKS[asked] ? asked : 'gm2';
+export const DECK = DECKS[DECK_ID];
+
+/** The id of the deck that has slide `id` (phones use it to follow the presenter to another deck). */
+export function deckWith(id) {
+  return Object.keys(DECKS).find((k) => DECKS[k].sections.some((sec) => sec.slides.some((s) => s.id === id))) || null;
+}
+
+/** The address of this page with another deck. */
+export function deckHref(id) {
+  const u = new URL(location.href);
+  if (id === 'gm2') u.searchParams.delete('deck'); else u.searchParams.set('deck', id);
+  return u.href;
+}
 
 // Every slide in order, with its section.
 export const SLIDES = DECK.sections.flatMap((sec) => sec.slides.map((s) => ({ ...s, section: sec.id })));

@@ -223,3 +223,44 @@ table.chooser tr.on td:last-child { color: var(--plum-ink); }
 @media (prefers-reduced-motion: reduce) {
   .opt-bar { transition: none; }
 }
+
+/* ------------------------------------------------------------------ the trains exercise */
+
+.k-red { background: var(--red); }
+.demo-key i.bar { width: 4px; height: 15px; border-radius: 0; background: var(--plum); }
+.demo-key i.dash { width: 0; height: 15px; border-radius: 0; background: none; border-left: 2px dashed var(--ink); }
+.train-body { fill: var(--plum); }
+.train-nose { fill: #F0E442; }
+.train-win { fill: #FFFFFF; opacity: 0.92; }
+.train-wheel { fill: var(--ink); }
+.chart .track { fill: none; stroke: var(--hair); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.chart .track.on { stroke: var(--plum); }
+.chart .track.dim { stroke: var(--surround); }
+.chart .station { fill: var(--paper); stroke: var(--ink); stroke-width: 2.5; }
+.chart .station.terminus { stroke: var(--plum); stroke-width: 3; }
+.chart .sleeper { stroke: var(--muted); stroke-width: 2; }
+.chart .mono { font-family: var(--mono); }
+.chart .tick.small, #stage .chart .tick.small { font-size: 12px; }
+.test-map .terminus-btn { cursor: pointer; }
+.test-map .terminus-btn .hit { fill: transparent; }
+.test-map .terminus-btn:hover .hit, .test-map .terminus-btn:focus-visible .hit { fill: var(--plum-tint); }
+.test-map .terminus-btn:focus { outline: none; }
+.test-map .terminus-btn.on .lbl-strong { fill: var(--plum-ink); }
+.test-map .terminus-btn.on .station { fill: var(--plum); }
+.board .board-bg { fill: var(--ink); }
+.board .board-head { font-family: var(--mono); font-size: 18px; fill: var(--orange); }
+.board .board-col { font-family: var(--mono); font-size: 13px; fill: #9AA3B2; }
+.board .board-txt { font-family: var(--mono); font-size: 16px; fill: var(--orange); }
+.board .board-txt.late { fill: #FFFFFF; }
+.board .flip { animation: flip 600ms ease-out; }
+@keyframes flip { from { opacity: 0; } }
+.table-box { display: flex; flex-direction: column; gap: 4px; }
+.table-box .expected { color: var(--muted); font-size: 0.88em; }
+pre.r-code {
+  margin: 0; padding: 12px 14px; border-radius: 8px; background: var(--ink); color: #F5F6F8;
+  font-family: var(--mono); font-size: 14px; line-height: 1.55; white-space: pre; overflow-x: auto;
+}
+pre.r-code .prompt { color: #9AA3B2; user-select: none; -webkit-user-select: none; }
+.code-box { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.code-box pre.r-code { align-self: stretch; }
+@media (prefers-reduced-motion: reduce) { .board .flip { animation: none; } }

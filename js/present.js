@@ -2,13 +2,16 @@
 
 import { CONFIG, backendUrl, joinUrl, shortUrl, loadPresenter, savePresenter } from './config.js';
 import { connect, explain, newVoterId } from './api.js';
-import { DECK, SLIDES } from './content.js';
+import { DECK, DECK_ID, SLIDES } from './content.js';
 import { mountDemo } from './demos.js';
 import { h, $, num, toast } from './ui.js';
 import {
   optionRows, numberPlot, textWall, questionSpec, sectionOf, weekLabel, rich, sectionStarts, shortLabel, numberQuestions,
 } from './render.js';
 import qrcode from './vendor/qrcode.mjs';
+import { el } from './svg.js';
+import { drawTrain } from './demos-trains.js';
+import { codeBlock } from './code.js';
 
 // ---------------------------------------------------------------- settings and state
 
@@ -17,8 +20,10 @@ const saved = loadPresenter();
 const P = {
   url: backendUrl(saved.url || undefined),
   key: saved.key || '',
-  session: saved.session || CONFIG.session,
+  // a deck other than the weekly recap keeps its votes in its own session
+  session: DECK.session ? (saved[`session_${DECK_ID}`] || DECK.session) : (saved.session || CONFIG.session),
 };
+const SESSION_FIELD = DECK.session ? `session_${DECK_ID}` : 'session';
 
 const S = {
   i: 0,
@@ -136,6 +141,7 @@ function buildRail() {
     rail.style.setProperty('--cell', `${w}px`);
     if (rail.scrollWidth <= rail.clientWidth) break;
   }
+  if (DECK.theme === 'trains') rail.append(trainIcon('rail-train'));
 }
 function updateRail() {
   const open = [...new Set([...LECTURE, weekOf(slide())])].sort().join(',');
@@ -146,6 +152,21 @@ function updateRail() {
   });
   const secId = slide().section;
   for (const g of rail.querySelectorAll('.rail-sec')) g.classList.toggle('now', g.dataset.sec === secId);
+  const loco = rail.querySelector('.rail-train');
+  if (loco && cells[S.i]) loco.style.left = `${cells[S.i].offsetLeft + cells[S.i].offsetWidth / 2 + 6}px`;
+}
+
+/** The little train of the trains exercise, as an <svg>. */
+function trainIcon(cls) {
+  const s = el('svg', { viewBox: '-64 -26 68 30', class: cls, 'aria-hidden': 'true', focusable: 'false' });
+  drawTrain(s, 1);
+  return s;
+}
+/** A track across the slide with a train on it: running through (title) or arriving (end). */
+function trainStrip(kind) {
+  return h('div', { class: `train-strip ${kind}`, 'aria-hidden': 'true' },
+    kind === 'arriving' ? h('span', { class: 'strip-sign' }, 'Cambridge') : h('span', { class: 'strip-sign board-sign' }, 'Leonardo', h('b', null, 'Delayed')),
+    h('div', { class: 'strip-car' }, trainIcon('strip-train')));
 }
 
 // ---------------------------------------------------------------- slides
@@ -201,12 +222,13 @@ function titleSlide() {
   const dots = h('div', { class: 'dots', 'aria-hidden': 'true' });
   const count = h('p', { class: 'joined' });
   view = { kind: 'title', dots, count };
-  return h('div', { class: 's-title' },
+  return h('div', { class: DECK.theme === 'trains' ? 's-title has-train' : 's-title' },
     h('div', { class: 't-left' },
       h('p', { class: 't-course' }, DECK.course),
       h('h1', null, DECK.title),
-      h('p', { class: 't-sub' }, lectureLine()),
+      h('p', { class: 't-sub' }, DECK.subtitle || lectureLine()),
       h('div', { class: 't-joined' }, count, dots)),
+    DECK.theme === 'trains' ? trainStrip('running') : null,
     h('div', { class: 't-right' },
       qrSvg(joinHref(), 'qr'),
       h('p', { class: 't-url' }, joinText()),
@@ -217,7 +239,9 @@ function recapSlide(s) {
   const slot = h('div', { class: 'demo-slot' });
   const node = h('div', { class: 's-recap' },
     h('h2', null, s.title),
-    h('ul', { class: 'points' }, s.points.map((p) => rich('li', null, p))),
+    s.code
+      ? h('div', { class: 'recap-main' }, h('ul', { class: 'points' }, s.points.map((p) => rich('li', null, p))), codeBlock(s.code))
+      : h('ul', { class: 'points' }, s.points.map((p) => rich('li', null, p))),
     slot,
     s.source ? h('p', { class: 'source' }, s.source) : null);
   if (s.demo) demo = mountDemo(s.demo, slot);
@@ -242,10 +266,11 @@ function questionSlide(s) {
 }
 
 function endSlide(s) {
-  return h('div', { class: 's-end' },
+  return h('div', { class: DECK.theme === 'trains' ? 's-end has-train' : 's-end' },
     h('h1', null, s.title),
-    h('p', { class: 'end-text' }, s.text),
-    h('p', { class: 'end-revise' }, 'Revise on your own, with every question and its answer, at ', h('b', null, joinText())));
+    rich('p', 'end-text', s.text),
+    h('p', { class: 'end-revise' }, 'Revise on your own, with every question and its answer, at ', h('b', null, joinText() + (DECK_ID === 'gm2' ? '' : `/?deck=${DECK_ID}`))),
+    DECK.theme === 'trains' ? trainStrip('arriving') : null);
 }
 
 /** Shrinks a question that would overflow the slide. */
@@ -626,7 +651,7 @@ function openSettings(message) {
   const keyIn = h('input', { type: 'password', id: 'set-key', value: P.key, autocomplete: 'off' });
   const sesIn = h('input', { type: 'text', id: 'set-ses', value: P.session, pattern: '[A-Za-z0-9_-]{1,48}', spellcheck: 'false' });
   const out = h('p', { class: 'set-out', role: 'status' }, message || '');
-  const read = () => ({ url: urlIn.value.trim(), key: keyIn.value.trim(), session: sesIn.value.trim() || CONFIG.session });
+  const read = () => ({ url: urlIn.value.trim(), key: keyIn.value.trim(), session: sesIn.value.trim() || DECK.session || CONFIG.session });
   const say = (t, bad) => { out.textContent = t; out.classList.toggle('bad', !!bad); };
 
   async function apply() {
@@ -637,7 +662,7 @@ function openSettings(message) {
     P.key = P.url ? v.key : 'demo';
     P.session = v.session;
     S.askedKey = false;
-    savePresenter({ url: v.url, key: v.key, session: v.session });
+    savePresenter({ ...loadPresenter(), url: v.url, key: v.key, [SESSION_FIELD]: v.session });
     if (changedSession) { S.stage = {}; S.closed = {}; loadPos(); }
     backend = await connect(P.url);
     buildFooter();

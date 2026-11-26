@@ -42,6 +42,8 @@ export function joinUrl(api) {
   const u = new URL(base);
   // Point phones at the same backend when the presenter uses one that config.js doesn't name.
   if (api && api !== CONFIG.backendUrl) u.searchParams.set('api', api);
+  // and at the same deck (?deck=trains)
+  if (query.get('deck')) u.searchParams.set('deck', query.get('deck'));
   return u.href;
 }
 

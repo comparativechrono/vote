@@ -83,6 +83,17 @@ Phones show each recap slide’s points as you reach them, with *Try the graph y
 
 The presenter’s slides then run from the title through that week to the wrap-up, numbered from question 1. The earlier weeks stay one click away: press **M** and pick a week, or click a week in the bar at the top. Students’ phones open *Revise on your own* at the newest week, and keep every earlier week.
 
+## The trains exercise
+
+A half-hour exercise for a lecture that starts late: *Leonardo’s train is late*. Students test five hypotheses about late trains (the rush hour, rain, the route, the number of stops, Mondays) with the tests of weeks 3 and 4, pick each test on a map of tests, and run the R on the slides.
+
+- Presenter: [`present.html?deck=trains`](https://comparativechrono.github.io/vote/present.html?deck=trains). Its QR code takes phones to the same deck, and phones already on the recap page follow it there.
+- Its votes are kept in their own session (`trains-2026-11-26`), apart from the weekly recaps. The presenter key is the one saved for the recap.
+- The data: [`data/trains.csv`](data/trains.csv), 400 simulated weekday arrivals at Cambridge, made by `dev/make-trains.py`. The journeys are made up, but their punctuality is close to the national figures from the Office of Rail and Road. `dev/trains-check.R` reproduces every figure on the slides.
+- In R: `trains <- read.csv("https://comparativechrono.github.io/vote/data/trains.csv", stringsAsFactors = TRUE)`
+
+The slides are in [`js/deck-trains.js`](js/deck-trains.js) and the graphs in [`js/demos-trains.js`](js/demos-trains.js).
+
 ## Change the questions
 
 Everything on the slides is in [`js/content.js`](js/content.js): sections, recap slides (title, points, the graph to show) and questions (text, options, the index of the right answer from 0, the explanation, and where the material is in Leonardo’s lectures). Keep a question’s `id` once people have voted on it, because votes are stored under it. The graphs of weeks 2 and 3 are in [`js/demos.js`](js/demos.js), and those of week 4 in [`js/demos-week4.js`](js/demos-week4.js).
@@ -107,12 +118,13 @@ If you change `apps-script/Code.gs`, paste it into the Apps Script editor again 
 |---|---|
 | `present.html`, `index.html` | The presenter’s page and the students’ page |
 | `js/content.js` | The recap: sections, slides and questions |
+| `js/deck-trains.js`, `js/demos-trains.js`, `data/trains.csv` | The trains exercise (`?deck=trains`): slides, graphs and data |
 | `js/demos.js`, `js/demos-week4.js`, `js/demo-kit.js` | The interactive graphs, by week, and what they share |
 | `js/stats.js`, `js/data/birthwt.js` | The statistics the graphs compute (checked against R, SciPy and statsmodels), and the birthwt data |
 | `js/present.js`, `js/student.js`, `js/render.js` | The two pages, and what they share |
 | `js/api.js`, `js/gas-shim.js`, `js/config.js` | Talking to the web app, demo mode, settings |
 | `apps-script/Code.gs` | The web app, to paste into Apps Script |
-| `dev/` | The local server, the load test and the font script |
+| `dev/` | The local server, the load test, the font script, and the scripts that make and check the trains data |
 | `css/`, `fonts/` | Styles and fonts |
 
 The graphs use the figures from Leonardo’s lectures. Those of week 4 fit their models to the real birthwt data, so their numbers are the same as Leonardo’s R output. Some graphs of weeks 2 and 3 use individual data points (mothers’ weights, the ALL probe) simulated to match the lectures’ summaries, and say so. Fonts and the QR code library are open source: see [THIRD_PARTY.md](THIRD_PARTY.md).
