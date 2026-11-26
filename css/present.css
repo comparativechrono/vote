@@ -259,3 +259,7 @@ body.presenter { background: var(--surround); }
   .board-sign b { animation: none; }
   .rail-train { transition: none; }
 }
+
+/* shown when another presenter page has taken the phones */
+.take-over { border: 0; font: inherit; font-size: 14px; cursor: pointer; }
+.take-over:hover { text-decoration: underline; }
