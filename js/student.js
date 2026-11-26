@@ -3,7 +3,7 @@
 
 import { CONFIG, backendUrl } from './config.js';
 import { connect, newVoterId } from './api.js';
-import { DECK, DECK_ID, SLIDES, byId, deckWith, deckHref } from './content.js';
+import { DECK, DECK_ID, DECKS, SLIDES, byId, deckWith, deckHref } from './content.js';
 import { codeBlock } from './code.js';
 import { mountDemo } from './demos.js';
 import { h, $, num } from './ui.js';
@@ -345,8 +345,17 @@ function renderRevise() {
   const i = Math.max(0, Math.min(REVISE.length - 1, L.reviseIndex));
   L.reviseIndex = i;
   const s = REVISE[i];
-  const select = h('select', { id: 'jump', 'aria-label': 'Section', onchange: (e) => { L.reviseIndex = REVISE.findIndex((x) => x.section === e.target.value); renderRevise(); window.scrollTo(0, 0); } },
-    DECK.sections.filter((sec) => REVISE.some((x) => x.section === sec.id)).map((sec) => h('option', { value: sec.id, selected: sec.id === s.section ? true : null }, sec.week ? `Week ${sec.week}: ${sec.label}` : sec.label)));
+  const select = h('select', {
+    id: 'jump', 'aria-label': 'Section',
+    onchange: (e) => {
+      const v = e.target.value;
+      // the other decks on this site, such as the trains exercise
+      if (v.startsWith('deck:')) { window.location.href = deckHref(v.slice(5)); return; }
+      L.reviseIndex = REVISE.findIndex((x) => x.section === v); renderRevise(); window.scrollTo(0, 0);
+    },
+  },
+  DECK.sections.filter((sec) => REVISE.some((x) => x.section === sec.id)).map((sec) => h('option', { value: sec.id, selected: sec.id === s.section ? true : null }, sec.week ? `Week ${sec.week}: ${sec.label}` : sec.label)),
+  h('optgroup', { label: 'Also here' }, Object.keys(DECKS).filter((k) => k !== DECK_ID).map((k) => h('option', { value: `deck:${k}` }, DECKS[k].title))));
   let body;
   if (s.type === 'recap') {
     body = recapPanel(s);

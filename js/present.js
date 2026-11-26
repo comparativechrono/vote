@@ -40,6 +40,7 @@ const S = {
   confirmReset: 0,
   renderedId: '',
   askedKey: false,
+  elsewhere: '',    // the session of another presenter page that has taken over, if any
 };
 
 let backend = null;
@@ -383,7 +384,10 @@ function updateFooter() {
   tools.badge.textContent = String(fresh);
   // the middle: answers or phones, and the connection
   const parts = [];
-  if (S.online === false) {
+  if (S.elsewhere) {
+    parts.push(h('button', { type: 'button', class: 'net bad take-over', title: 'Phones are following another presenter page. Click to bring them back here.', onclick: () => push() },
+      'Phones are on another presenter page. Bring them here'));
+  } else if (S.online === false) {
     parts.push(h('span', { class: 'net bad', title: S.error }, 'Can’t reach the server'));
   } else if (backend && backend.mode === 'demo') {
     parts.push(h('span', { class: 'net demo', title: 'Votes stay in this browser. Set backendUrl in js/config.js for real phones.' }, 'Demo mode'));
@@ -482,6 +486,7 @@ async function sendState() {
     const r = await backend.post(body);
     if (!r.ok) throw Object.assign(new Error(r.error), { code: r.error });
     setOnline(true);
+    if (S.elsewhere) { S.elsewhere = ''; updateFooter(); }
   } catch (e) {
     setOnline(false, e);
     clearTimeout(pushTimer);
@@ -497,7 +502,12 @@ async function poll() {
       if (!r.ok) throw Object.assign(new Error(r.error), { code: r.error });
       S.live = r;
       setOnline(true);
-      if (r.state && (r.state.slide !== slide().id || r.state.session !== P.session)) push();
+      // Another presenter page (another deck, or another lecture) has taken over: step aside
+      // rather than pull the phones back. Any key or click here takes them back.
+      const st = r.state;
+      const other = st && st.session && st.session !== P.session ? st.session : '';
+      if (other !== S.elsewhere) { S.elsewhere = other; updateFooter(); }
+      if (st && !other && st.slide !== slide().id) push();
       updateDynamic();
       if (S.overlay === 'comments') renderComments();
       if (S.overlay === 'qr') renderQrBig();
