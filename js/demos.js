@@ -9,6 +9,7 @@ import * as S from './stats.js';
 import { W, pT2, code, frame, controls, note, g, exactNormal } from './demo-kit.js';
 import { WEEK4_DEMOS } from './demos-week4.js';
 import { TRAINS_DEMOS } from './demos-trains.js';
+import { WEEK5_DEMOS } from './demos-week5.js';
 
 // ================================================================ describing data
 
@@ -934,6 +935,7 @@ export const DEMOS = {
   meanMedian, normal, counts, sampling, coverage, alleles,
   pArea, pvalueSize, power, pSimulation, permutation, table2x2, anova, models, hwe, chooser,
   ...WEEK4_DEMOS,
+  ...WEEK5_DEMOS,
   ...TRAINS_DEMOS,
 };
 

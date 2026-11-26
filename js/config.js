@@ -10,11 +10,11 @@ export const CONFIG = {
   joinUrl: '',
 
   // Votes are kept per session. Use a new name for each lecture (letters, digits, - and _).
-  session: '2026-w5',
+  session: '2026-w6',
 
   // The weeks this lecture goes through, in order, between the start and the wrap-up slides.
   // The other weeks stay one click away (M, Sections) and on students' phones. [] = every week.
-  lectureWeeks: [4],
+  lectureWeeks: [5],
 
   // How often phones and the presenter's page ask the server what is happening, in ms.
   // Phones wait pollStudentMs plus up to pollJitterMs at random, so that they don't all ask
