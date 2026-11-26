@@ -1,6 +1,6 @@
 # GM2 recapped
 
-An interactive recap of Leonardo’s lectures for GM2 Research and Statistical Skills, built up week by week: slides with interactive graphs, questions that students answer on their phones, and live results. It covers weeks 2 to 4 so far: describing data and uncertainty, hypothesis tests, and linear and logistic regression.
+An interactive recap of Leonardo’s lectures for GM2 Research and Statistical Skills, built up week by week: slides with interactive graphs, questions that students answer on their phones, and live results. It covers weeks 2 to 5 so far: describing data and uncertainty, hypothesis tests, linear and logistic regression, and genome-scale inference.
 
 - **`present.html`** is what you show: the recap as slides, a graph to play with on each recap slide, the questions with their live results, the QR code and the comments sent from phones.
 - **`index.html`** is what students open by scanning the QR code: it follows your slides, takes their votes, numbers, free-text answers and comments, and afterwards lets them revise every slide and question on their own.
@@ -96,7 +96,7 @@ The slides are in [`js/deck-trains.js`](js/deck-trains.js) and the graphs in [`j
 
 ## Change the questions
 
-Everything on the slides is in [`js/content.js`](js/content.js): sections, recap slides (title, points, the graph to show) and questions (text, options, the index of the right answer from 0, the explanation, and where the material is in Leonardo’s lectures). Keep a question’s `id` once people have voted on it, because votes are stored under it. The graphs of weeks 2 and 3 are in [`js/demos.js`](js/demos.js), and those of week 4 in [`js/demos-week4.js`](js/demos-week4.js).
+Everything on the slides is in [`js/content.js`](js/content.js): sections, recap slides (title, points, the graph to show) and questions (text, options, the index of the right answer from 0, the explanation, and where the material is in Leonardo’s lectures). Keep a question’s `id` once people have voted on it, because votes are stored under it. The graphs of weeks 2 and 3 are in [`js/demos.js`](js/demos.js), and those of weeks 4 and 5 in [`js/demos-week4.js`](js/demos-week4.js) and [`js/demos-week5.js`](js/demos-week5.js).
 
 If you change `apps-script/Code.gs`, paste it into the Apps Script editor again and choose **Deploy ▸ Manage deployments**, the pencil icon, **Version: New version**, **Deploy**. The web app keeps its URL. (The web app runs the last deployed version, not the code in the editor.)
 
@@ -127,4 +127,4 @@ If you change `apps-script/Code.gs`, paste it into the Apps Script editor again 
 | `dev/` | The local server, the load test, the font script, and the scripts that make and check the trains data |
 | `css/`, `fonts/` | Styles and fonts |
 
-The graphs use the figures from Leonardo’s lectures. Those of week 4 fit their models to the real birthwt data, so their numbers are the same as Leonardo’s R output. Some graphs of weeks 2 and 3 use individual data points (mothers’ weights, the ALL probe) simulated to match the lectures’ summaries, and say so. Fonts and the QR code library are open source: see [THIRD_PARTY.md](THIRD_PARTY.md).
+The graphs use the figures from Leonardo’s lectures. Those of week 4 fit their models to the real birthwt data, so their numbers are the same as Leonardo’s R output. Those of week 5 use numbers derived from the real FAMuSS and Virco data by `dev/make-famuss.R`, which reproduces the lecture’s scan, PCA and corrections. Some graphs of weeks 2 and 3 use individual data points (mothers’ weights, the ALL probe) simulated to match the lectures’ summaries, and say so. Fonts and the QR code library are open source: see [THIRD_PARTY.md](THIRD_PARTY.md).

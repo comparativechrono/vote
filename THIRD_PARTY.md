@@ -12,6 +12,8 @@
 
 `js/data/birthwt.js` holds the `birthwt` data of the R package MASS (Venables and Ripley, GPL-2 or GPL-3): 189 births at Baystate Medical Center, Springfield, Massachusetts, in 1986, from Hosmer and Lemeshow (1989), *Applied Logistic Regression*. The copy was taken from the Rdatasets collection (github.com/vincentarelbundock/Rdatasets).
 
+`js/data/famuss.js` holds numbers derived from two datasets that lecture W5 uses, as distributed with Foulkes (2009), *Applied Statistical Genetics with R* (Springer): the FAMuSS study of muscle size and strength (Thompson and others, 2004), and the Virco HIV-1 protease data of the Stanford HIV Drug Resistance Database. It keeps each SNP’s regression results, two principal components per volunteer with their self-reported race, linkage disequilibrium between some SNPs, and the Virco tests’ p-values; no genotypes. `dev/make-famuss.R` makes it from the original files, which are not in this repository.
+
 ## Figures
 
 The numbers in the recap come from Dr Leonardo Bottolo’s GM2 lectures (University of Cambridge, 2026), which use the `birthwt` data, the ALL data (Bioconductor) and the FAMuSS data.
